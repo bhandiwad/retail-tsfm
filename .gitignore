@@ -1,0 +1,22 @@
+# Dependencies & Virtual Environments
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Environment variables & secrets (keep .env.example tracked)
+.env
+.env.local
+.env.*.local
+
+# OS & Editor files
+.DS_Store
+.idea/
+.vscode/
+*.log
