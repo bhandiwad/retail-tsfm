@@ -35,12 +35,17 @@ import {
   CheckCircle2,
   Settings2,
   AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  Bot,
+  LineChart,
 } from 'lucide-react';
 
 const initialDataset = rawDataset as unknown as RetailDemoDataset;
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8005';
 
 type ActiveTab = 'workspace' | 'coldstart' | 'routing' | 'connectors';
+type SkuWorkspaceSubTab = 'trajectory' | 'simulator' | 'copilot';
 
 const OPENROUTER_MODELS = [
   { id: 'google/gemini-2.5-flash', label: 'Google Gemini 2.5 Flash (Fast & Sharp)' },
@@ -55,25 +60,25 @@ const OPENROUTER_MODELS = [
 const MARKET_CONTEXT_EVENTS = [
   {
     id: 'tiktok-viral',
-    label: 'Social PDP Velocity Spike (+22% Coastal Demand)',
+    label: 'Social Velocity Spike (+22% Coastal)',
     demandLiftPct: 22,
     leadTimeShiftWeeks: 0,
   },
   {
     id: 'port-delay',
-    label: 'ASN Transit Delay (+1 Wk Inbound Lead Time)',
+    label: 'ASN Transit Delay (+1 Wk Lead Time)',
     demandLiftPct: 0,
     leadTimeShiftWeeks: 1,
   },
   {
     id: 'warm-anomaly',
-    label: 'NOAA Warm Anomaly (+12% Resort / -14% Weather Boot)',
+    label: 'NOAA Warm Anomaly (+12% Resort)',
     demandLiftPct: 12,
     leadTimeShiftWeeks: 0,
   },
   {
     id: 'competitor-oos',
-    label: 'Dept. Store Competitor Stockout (+16% Search Share)',
+    label: 'Competitor Stockout (+16% Search)',
     demandLiftPct: 16,
     leadTimeShiftWeeks: 0,
   },
@@ -100,12 +105,15 @@ export function App() {
     initialDataset.platformMeta.erpConnected
   );
   const [activeTab, setActiveTab] = useState<ActiveTab>('workspace');
+  const [skuSubTab, setSkuSubTab] = useState<SkuWorkspaceSubTab>('trajectory');
+  const [showPipelineDetails, setShowPipelineDetails] = useState<boolean>(false);
+
   const [selectedSkuId, setSelectedSkuId] = useState<string>(
     initialDataset.skus[0].skuId
   );
   const [archetypeFilter, setArchetypeFilter] = useState<string>('ALL');
 
-  // OpenRouter & AI Configuration State
+  // AI Engine Configuration State
   const [showConfigModal, setShowConfigModal] = useState<boolean>(false);
   const [openrouterConfigured, setOpenrouterConfigured] =
     useState<boolean>(false);
@@ -127,7 +135,6 @@ export function App() {
     Record<string, LiveAgentSynthesisResult>
   >({});
 
-  // Load OpenRouter & Chronos status from backend on mount
   useEffect(() => {
     fetch(`${API_BASE}/api/ai-status`)
       .then((r) => (r.ok ? r.json() : null))
@@ -264,7 +271,6 @@ export function App() {
     [activeLiveSignalId]
   );
 
-  // Run Central OpenRouter LLM + Chronos-Bolt Reasoning
   const handleRunCentralLlmWhatIf = async (overridePrompt?: string) => {
     setIsRunningLlmAgent(true);
     const promptToUse =
@@ -358,7 +364,6 @@ export function App() {
     }
   };
 
-  // Export ERP Execution Packet CSV for SAP S/4HANA / Blue Yonder / Merch Operations
   const handleExportErpExecutionCsv = () => {
     const headers = [
       'SKU_ID',
@@ -519,39 +524,41 @@ export function App() {
   const getActionBadgeStyle = (type: SkuRecord['actionType']) => {
     switch (type) {
       case 'DC_TRANSFER':
-        return 'bg-indigo-50 text-indigo-700 border-indigo-200';
+        return 'bg-indigo-50 text-indigo-700 border-indigo-200/80';
       case 'MARKDOWN':
-        return 'bg-amber-50 text-amber-800 border-amber-200';
+        return 'bg-amber-50 text-amber-800 border-amber-200/80';
       case 'COLD_START_ALLOCATION':
-        return 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200';
+        return 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-200/80';
       case 'BUY_REDUCTION':
-        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200/80';
       default:
-        return 'bg-sky-50 text-sky-700 border-sky-200';
+        return 'bg-sky-50 text-sky-700 border-sky-200/80';
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col">
       {/* AI ENGINE CONFIGURATION MODAL */}
       {showConfigModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <div className="flex items-center gap-2">
-                <KeyRound className="w-5 h-5 text-indigo-600" />
+        <div className="fixed inset-0 z-50 bg-slate-900/35 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center">
+                  <KeyRound className="w-4 h-4 text-indigo-600" />
+                </div>
                 <div>
                   <h3 className="text-base font-bold text-slate-900">
-                    Central AI Reasoning Engine Configuration
+                    Central AI Reasoning Engine
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Configure API credentials &amp; active reasoning model (persists to <code className="text-indigo-700">.env</code>)
+                    Configure API credentials &amp; active reasoning model
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowConfigModal(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -559,7 +566,7 @@ export function App() {
 
             <form onSubmit={handleSaveOpenRouterConfig} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
+                <label className="block text-xs font-semibold text-slate-800 mb-1.5">
                   AI Engine API Key
                 </label>
                 <input
@@ -567,16 +574,15 @@ export function App() {
                   value={openrouterApiKeyInput}
                   onChange={(e) => setOpenrouterApiKeyInput(e.target.value)}
                   placeholder="Enter API key..."
-                  className="w-full rounded-xl bg-slate-50 border border-slate-300 px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-indigo-600"
+                  className="w-full rounded-xl bg-slate-50 border border-slate-200 px-3.5 py-2.5 text-xs font-mono text-slate-900 focus:outline-none focus:border-indigo-600 focus:bg-white transition"
                 />
-                <p className="text-[11px] text-slate-500 mt-1">
-                  Powers the Central AI Scenario Engine, Selective Context Guardrail, and
-                  Merchandising Copilot.
+                <p className="text-[11px] text-slate-500 mt-1.5">
+                  Powers the Scenario Simulator, Selective Context Guardrail, and Merchandising Copilot.
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-800 mb-1">
+                <label className="block text-xs font-semibold text-slate-800 mb-1.5">
                   Active Reasoning Model
                 </label>
                 <select
@@ -585,7 +591,7 @@ export function App() {
                     setOpenrouterModel(e.target.value);
                     setCustomModelInput('');
                   }}
-                  className="w-full rounded-xl bg-slate-50 border border-slate-300 px-3 py-2 text-xs font-medium text-slate-900 focus:outline-none focus:border-indigo-600"
+                  className="w-full rounded-xl bg-slate-50 border border-slate-200 px-3.5 py-2.5 text-xs font-medium text-slate-900 focus:outline-none focus:border-indigo-600 focus:bg-white transition"
                 >
                   {OPENROUTER_MODELS.map((m) => (
                     <option key={m.id} value={m.id}>
@@ -596,25 +602,25 @@ export function App() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">
-                  Custom Model Identifier (Optional):
+                <label className="block text-xs font-medium text-slate-600 mb-1.5">
+                  Custom Model Identifier (Optional)
                 </label>
                 <input
                   type="text"
                   value={customModelInput}
                   onChange={(e) => setCustomModelInput(e.target.value)}
                   placeholder="Optional custom model ID..."
-                  className="w-full rounded-xl bg-slate-50 border border-slate-300 px-3 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-indigo-600"
+                  className="w-full rounded-xl bg-slate-50 border border-slate-200 px-3.5 py-2 text-xs font-mono text-slate-900 focus:outline-none focus:border-indigo-600 focus:bg-white transition"
                 />
               </div>
 
               {configFeedback && (
                 <div
-                  className={`p-3 rounded-xl text-xs font-medium flex items-start gap-2 border ${
+                  className={`p-3.5 rounded-xl text-xs font-medium flex items-start gap-2.5 border ${
                     configFeedback.status === 'VERIFIED_LIVE' ||
                     configFeedback.status === 'SAVED'
-                      ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                      : 'bg-rose-50 border-rose-200 text-rose-800'
+                      ? 'bg-emerald-50/80 border-emerald-200 text-emerald-800'
+                      : 'bg-rose-50/80 border-rose-200 text-rose-800'
                   }`}
                 >
                   {configFeedback.status === 'VERIFIED_LIVE' ||
@@ -627,28 +633,28 @@ export function App() {
                 </div>
               )}
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowConfigModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold cursor-pointer transition"
                 >
                   Close
                 </button>
                 <button
                   type="submit"
                   disabled={isSavingConfig}
-                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-60"
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-60 transition"
                 >
                   {isSavingConfig ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      Verifying AI Engine...
+                      Verifying...
                     </>
                   ) : (
                     <>
                       <Check className="w-3.5 h-3.5" />
-                      Save &amp; Verify Connection
+                      Save &amp; Verify
                     </>
                   )}
                 </button>
@@ -658,291 +664,232 @@ export function App() {
         </div>
       )}
 
-      {/* TOP SYSTEM BAR (PRODUCTION ENTERPRISE HEADER) */}
-      <header className="border-b border-slate-200 bg-white/95 backdrop-blur-md sticky top-0 z-30 shadow-2xs">
-        <div className="max-w-[1600px] mx-auto px-4 lg:px-6 py-3 flex flex-wrap items-center justify-between gap-4">
-          {/* Brand & Connected Enterprise Stack */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 via-indigo-700 to-emerald-600 flex items-center justify-center shadow-sm font-mono font-bold text-white text-sm">
-              P-AI
+      {/* CLEAN SINGLE-TIER HEADER BAR */}
+      <header className="border-b border-slate-200/80 bg-white/90 backdrop-blur-md sticky top-0 z-30">
+        <div className="max-w-[1560px] mx-auto px-5 lg:px-8 h-16 flex items-center justify-between gap-4">
+          {/* Brand Title */}
+          <div className="flex items-center gap-3.5">
+            <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center shadow-xs font-mono font-bold text-white text-xs tracking-wider">
+              P·AI
             </div>
             <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-base sm:text-lg font-bold tracking-tight text-slate-900">
+              <div className="flex items-center gap-2.5">
+                <h1 className="text-base font-bold text-slate-900 tracking-tight">
                   Pandita's Adaptive Demand Decision Layer
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">
-                  ERP &amp; Planning Overlay
-                </span>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-0.5">
-                <span>
-                  Connected:{' '}
-                  <strong className="text-slate-700 font-mono">
-                    {dataSourceBadge}
-                  </strong>
-                </span>
-                <span>•</span>
-                <span className="text-indigo-700 font-medium">
-                  Chronos-2 Quantiles + Central AI Decision Engine
+                <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/70">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                  {dataSourceBadge.split('+')[0].trim()}
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Primary View Navigation Tabs + AI Config Button */}
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex flex-wrap items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
-              <button
-                onClick={() => setActiveTab('workspace')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
-                  activeTab === 'workspace'
-                    ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/80'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Layers className="w-3.5 h-3.5" />
-                Exception Command Center ({skus.length})
-              </button>
-              <button
-                onClick={() => setActiveTab('coldstart')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
-                  activeTab === 'coldstart'
-                    ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/80'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                Cold-Start Launch Studio
-              </button>
-              <button
-                onClick={() => setActiveTab('routing')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
-                  activeTab === 'routing'
-                    ? 'bg-white text-indigo-700 shadow-xs border border-slate-200/80'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Activity className="w-3.5 h-3.5" />
-                Model Routing &amp; P&amp;L Impact
-              </button>
-              <button
-                onClick={() => setActiveTab('connectors')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
-                  activeTab === 'connectors'
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100/80 border border-indigo-200/60'
-                }`}
-              >
-                <Database className="w-3.5 h-3.5" />
-                Data Ingestion &amp; ERP Connectors
-              </button>
-            </div>
-
-            {/* Subtle AI Engine Settings Button */}
+          {/* Sleek Center Segmented Navigation */}
+          <nav className="hidden md:flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl border border-slate-200/60">
             <button
-              onClick={() => setShowConfigModal(true)}
-              className={`px-3 py-2 rounded-xl text-xs font-semibold border transition flex items-center gap-1.5 cursor-pointer ${
-                openrouterConfigured
-                  ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
-                  : 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
+              onClick={() => setActiveTab('workspace')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'workspace'
+                  ? 'bg-white text-slate-900 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Settings2 className="w-3.5 h-3.5" />
-              AI Engine
+              <Layers className="w-3.5 h-3.5 text-indigo-600" />
+              Exception Inbox
+              <span className="ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-mono bg-indigo-50 text-indigo-700">
+                {skus.length}
+              </span>
             </button>
-          </div>
-        </div>
+            <button
+              onClick={() => setActiveTab('coldstart')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'coldstart'
+                  ? 'bg-white text-slate-900 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-fuchsia-600" />
+              Cold-Start Studio
+            </button>
+            <button
+              onClick={() => setActiveTab('routing')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'routing'
+                  ? 'bg-white text-slate-900 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Activity className="w-3.5 h-3.5 text-emerald-600" />
+              Model Routing &amp; ROI
+            </button>
+            <button
+              onClick={() => setActiveTab('connectors')}
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer ${
+                activeTab === 'connectors'
+                  ? 'bg-white text-slate-900 shadow-2xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Database className="w-3.5 h-3.5 text-sky-600" />
+              Data &amp; Connectors
+            </button>
+          </nav>
 
-        {/* LIVE MARKET & SUPPLY CHAIN CONTEXT FEED BAR */}
-        <div className="bg-slate-50/90 border-t border-slate-200">
-          <div className="max-w-[1600px] mx-auto px-4 lg:px-6 py-2 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-1.5 overflow-x-auto">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-slate-600 font-bold flex items-center gap-1 shrink-0">
-                <Flame className="w-3.5 h-3.5 text-indigo-600" />
-                Live Market &amp; Supply Chain Signals:
+          {/* Right Action Controls */}
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={handleExportErpExecutionCsv}
+              className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-2xs transition"
+              title="Export Approved Orders for ERP"
+            >
+              <Download className="w-3.5 h-3.5 text-indigo-600" />
+              <span className="hidden sm:inline">Export PO Sheet</span>
+              <span className="px-1.5 py-0.2 rounded-md bg-emerald-50 text-emerald-700 font-mono text-[10px]">
+                {approvedCount}/{skus.length}
               </span>
-              {MARKET_CONTEXT_EVENTS.map((sig) => (
-                <button
-                  key={sig.id}
-                  onClick={() => {
-                    const nextId = activeLiveSignalId === sig.id ? null : sig.id;
-                    setActiveLiveSignalId(nextId);
-                    if (nextId) {
-                      setCustomScenarioPrompt(sig.label);
-                    }
-                  }}
-                  className={`px-2.5 py-0.5 rounded-md text-[11px] font-mono transition border cursor-pointer shrink-0 ${
-                    activeLiveSignalId === sig.id
-                      ? 'bg-indigo-600 border-indigo-600 text-white font-semibold'
-                      : 'bg-white border-slate-200 text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  {sig.label}
-                </button>
-              ))}
-            </div>
+            </button>
 
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-mono text-slate-500">
-                Approved Actions: <strong className="text-emerald-700">{approvedCount}/{skus.length}</strong>
-              </span>
-              <button
-                onClick={handleExportErpExecutionCsv}
-                className="px-2.5 py-1 rounded-lg bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 text-[11px] font-semibold flex items-center gap-1 cursor-pointer shadow-2xs"
-              >
-                <Download className="w-3 h-3 text-indigo-600" />
-                Export ERP Execution Sheet (CSV)
-              </button>
-            </div>
+            <button
+              onClick={() => setShowConfigModal(true)}
+              className="px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 bg-slate-50/80 hover:bg-slate-100 text-slate-700 transition flex items-center gap-1.5 cursor-pointer"
+            >
+              <Settings2 className="w-3.5 h-3.5 text-indigo-600" />
+              <span>AI Engine</span>
+            </button>
           </div>
         </div>
       </header>
 
       {/* MAIN CONTENT CONTAINER */}
-      <main className="max-w-[1600px] w-full mx-auto px-4 lg:px-6 py-5 flex-1 space-y-5">
-        {/* EXECUTIVE PORTFOLIO P&L & INVENTORY HEALTH RIBBON */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500 font-semibold">
-                Excess Weeks of Supply (WOS)
-              </span>
-              <DollarSign className="w-4 h-4 text-emerald-600" />
-            </div>
-            <div className="my-1.5 flex items-baseline justify-between">
-              <div className="text-2xl font-mono font-bold text-slate-900">
-                4.8 <span className="text-slate-400 text-base">→</span>{' '}
-                <span className="text-emerald-600">2.3 wks</span>
+      <main className="max-w-[1560px] w-full mx-auto px-5 lg:px-8 py-6 flex-1 space-y-6">
+        {/* BREATHABLE 4-METRIC EXECUTIVE KPI RIBBON */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="card-surface rounded-2xl p-5 flex flex-col justify-between">
+            <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+              <span>Excess Weeks of Supply</span>
+              <div className="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center">
+                <DollarSign className="w-4 h-4 text-emerald-600" />
               </div>
-              <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+            </div>
+            <div className="mt-3 flex items-baseline justify-between">
+              <div className="text-2xl font-bold text-slate-900 font-mono tracking-tight">
+                4.8w <span className="text-slate-300 font-sans font-normal mx-0.5">→</span>{' '}
+                <span className="text-emerald-600">2.3w</span>
+              </div>
+              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
                 $1.12M Cash Freed
               </span>
             </div>
-            <div className="text-[11px] text-slate-500 border-t border-slate-100 pt-1.5">
-              Eliminates $280K/yr holding cost &amp; $385K late clearance markdowns
-            </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500 font-semibold">
-                Promo &amp; Peak Service Level (In-Stock %)
-              </span>
-              <PackageCheck className="w-4 h-4 text-indigo-600" />
+          <div className="card-surface rounded-2xl p-5 flex flex-col justify-between">
+            <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+              <span>Peak &amp; Promo In-Stock Rate</span>
+              <div className="w-7 h-7 rounded-lg bg-indigo-50 flex items-center justify-center">
+                <PackageCheck className="w-4 h-4 text-indigo-600" />
+              </div>
             </div>
-            <div className="my-1.5 flex items-baseline justify-between">
-              <div className="text-2xl font-mono font-bold text-slate-900">
-                91.6% <span className="text-slate-400 text-base">→</span>{' '}
+            <div className="mt-3 flex items-baseline justify-between">
+              <div className="text-2xl font-bold text-slate-900 font-mono tracking-tight">
+                91.6% <span className="text-slate-300 font-sans font-normal mx-0.5">→</span>{' '}
                 <span className="text-indigo-600">96.8%</span>
               </div>
-              <span className="text-xs font-mono font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+              <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-full">
                 +5.2 pts Lift
               </span>
             </div>
-            <div className="text-[11px] text-slate-500 border-t border-slate-100 pt-1.5">
-              Protects $412K in high-margin sales across core footwear sizes
-            </div>
           </div>
 
-          <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500 font-semibold">
-                Management-by-Exception Coverage
-              </span>
-              <Clock className="w-4 h-4 text-amber-600" />
-            </div>
-            <div className="my-1.5 flex items-baseline justify-between">
-              <div className="text-2xl font-mono font-bold text-slate-900">
-                {skus.length}{' '}
-                <span className="text-xs font-normal text-slate-500">
-                  Exceptions / {161 + skus.length} SKUs
-                </span>
+          <div className="card-surface rounded-2xl p-5 flex flex-col justify-between">
+            <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+              <span>12-Week Forecast Error (WAPE)</span>
+              <div className="w-7 h-7 rounded-lg bg-fuchsia-50 flex items-center justify-center">
+                <TrendingUp className="w-4 h-4 text-fuchsia-600" />
               </div>
-              <span className="text-xs font-mono font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                95.8% Auto-Managed
-              </span>
             </div>
-            <div className="text-[11px] text-slate-500 border-t border-slate-100 pt-1.5">
-              161 stable series within corridor • 18.5 planner hrs/wk saved
-            </div>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-2xs flex flex-col justify-between">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500 font-semibold">
-                12-Week Out-of-Sample WAPE
-              </span>
-              <TrendingUp className="w-4 h-4 text-fuchsia-600" />
-            </div>
-            <div className="my-1.5 flex items-baseline justify-between">
-              <div className="text-2xl font-mono font-bold text-slate-900">
-                29.8% <span className="text-slate-400 text-base">→</span>{' '}
+            <div className="mt-3 flex items-baseline justify-between">
+              <div className="text-2xl font-bold text-slate-900 font-mono tracking-tight">
+                29.8% <span className="text-slate-300 font-sans font-normal mx-0.5">→</span>{' '}
                 <span className="text-emerald-600">16.4%</span>
               </div>
-              <span className="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
                 -13.4 pt Error
               </span>
             </div>
-            <div className="text-[11px] text-slate-500 border-t border-slate-100 pt-1.5">
-              Approved Execution Value:{' '}
-              <strong className="text-emerald-700 font-mono">
-                ${approvedValueCaptured.toLocaleString()}
-              </strong>{' '}
-              of ${(totalExceptionOpportunityUsd / 1000).toFixed(1)}K
+          </div>
+
+          <div className="card-surface rounded-2xl p-5 flex flex-col justify-between">
+            <div className="flex items-center justify-between text-xs font-medium text-slate-500">
+              <span>Exception Queue Progress</span>
+              <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center">
+                <Clock className="w-4 h-4 text-amber-600" />
+              </div>
+            </div>
+            <div className="mt-3 flex items-baseline justify-between">
+              <div className="text-2xl font-bold text-slate-900 font-mono tracking-tight">
+                {approvedCount}/{skus.length}{' '}
+                <span className="text-xs font-sans font-medium text-slate-400">
+                  Reviewed
+                </span>
+              </div>
+              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-mono">
+                ${(approvedValueCaptured / 1000).toFixed(1)}K Captured
+              </span>
             </div>
           </div>
         </div>
 
         {/* VIEW SWITCHER */}
         {activeTab === 'coldstart' ? (
-          <ColdStartStudio
-            data={initialDataset.coldStartStudio}
-            onApproveColdStartAction={(skuId, summary) => {
-              const target = skus.find((s) => s.skuId === skuId) || skus[2];
-              recordDecision(
-                target,
-                'APPROVED',
-                'Multimodal Look-Alike Prior + Size Curve Fit',
-                summary
-              );
-            }}
-            isApproved={decisions['TOMS-3109-OAT'] === 'APPROVED'}
-          />
+          <div className="animate-fade-in">
+            <ColdStartStudio
+              data={initialDataset.coldStartStudio}
+              onApproveColdStartAction={(skuId, summary) => {
+                const target = skus.find((s) => s.skuId === skuId) || skus[2];
+                recordDecision(
+                  target,
+                  'APPROVED',
+                  'Multimodal Look-Alike Prior + Size Curve Fit',
+                  summary
+                );
+              }}
+              isApproved={decisions['TOMS-3109-OAT'] === 'APPROVED'}
+            />
+          </div>
         ) : activeTab === 'routing' ? (
-          <RoutingAndRoiView benchmarks={initialDataset.routingBenchmarks} />
+          <div className="animate-fade-in">
+            <RoutingAndRoiView benchmarks={initialDataset.routingBenchmarks} />
+          </div>
         ) : activeTab === 'connectors' ? (
-          <DataConnectorHub
-            onIngestCustomSkus={handleIngestCustomSkus}
-            onJumpToWorkspace={(skuId) => handleSelectSku(skuId)}
-            existingSkusCount={skus.length}
-          />
+          <div className="animate-fade-in">
+            <DataConnectorHub
+              onIngestCustomSkus={handleIngestCustomSkus}
+              onJumpToWorkspace={(skuId) => handleSelectSku(skuId)}
+              existingSkusCount={skus.length}
+            />
+          </div>
         ) : (
-          /* TAB 1: EXCEPTION COMMAND CENTER */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-            {/* LEFT COLUMN: EXCEPTION-FIRST QUEUE (4 cols) */}
-            <div className="lg:col-span-4 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-slate-200">
+          /* TAB 1: STREAMLINED EXCEPTION COMMAND CENTER */
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start animate-fade-in">
+            {/* LEFT COLUMN: CLEAN SCANNABLE EXCEPTION INBOX (4 cols) */}
+            <div className="lg:col-span-4 card-surface rounded-2xl p-5 space-y-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-sm font-bold text-slate-900">
-                      Prioritized Inventory Exceptions
-                    </h2>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold">
-                      {skus.length} Active
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Ranked by net gross margin &amp; working capital impact
+                  <h2 className="text-base font-bold text-slate-900">
+                    Exception Inbox
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {skus.length} SKUs needing action • 161 auto-managed
                   </p>
                 </div>
-                <span className="text-[11px] font-mono text-emerald-700 font-bold">
-                  ${(totalExceptionOpportunityUsd / 1000).toFixed(1)}K At Stake
+                <span className="px-2.5 py-1 rounded-full text-xs font-mono font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+                  +${(totalExceptionOpportunityUsd / 1000).toFixed(0)}K Value
                 </span>
               </div>
 
-              {/* Archetype Filter Pills */}
-              <div className="flex flex-wrap gap-1">
+              {/* Clean Archetype Filter Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
                 {[
                   'ALL',
                   'Promotional',
@@ -954,19 +901,19 @@ export function App() {
                   <button
                     key={arch}
                     onClick={() => setArchetypeFilter(arch)}
-                    className={`px-2 py-1 rounded-lg text-[10px] font-mono transition cursor-pointer ${
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer shrink-0 ${
                       archetypeFilter === arch
-                        ? 'bg-indigo-600 text-white font-semibold'
-                        : 'bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200'
+                        ? 'bg-slate-900 text-white'
+                        : 'bg-slate-100/80 text-slate-600 hover:bg-slate-200/70'
                     }`}
                   >
-                    {arch === 'ALL' ? `All (${skus.length})` : arch}
+                    {arch === 'ALL' ? 'All' : arch}
                   </button>
                 ))}
               </div>
 
-              {/* Exception Cards List */}
-              <div className="space-y-2.5 max-h-[760px] overflow-y-auto pr-1">
+              {/* Streamlined Exception Cards List */}
+              <div className="space-y-2.5 max-h-[680px] overflow-y-auto pr-1">
                 {filteredSkus.map((sku) => {
                   const isSelected = sku.skuId === selectedSku.skuId;
                   const status = decisions[sku.skuId] || 'PENDING_REVIEW';
@@ -974,61 +921,44 @@ export function App() {
                     <div
                       key={sku.skuId}
                       onClick={() => handleSelectSku(sku.skuId)}
-                      className={`p-3 rounded-xl border transition cursor-pointer ${
+                      className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
                         isSelected
-                          ? 'bg-indigo-50/60 border-indigo-500 shadow-xs ring-1 ring-indigo-500/30'
-                          : 'bg-white border-slate-200 hover:border-slate-300 hover:bg-slate-50/50'
+                          ? 'bg-indigo-50/40 border-indigo-500 shadow-xs ring-1 ring-indigo-500/20'
+                          : 'bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/40'
                       }`}
                     >
-                      <div className="flex items-start gap-3">
+                      <div className="flex items-center gap-3.5">
                         <FootwearVisual
                           silhouetteType={sku.silhouetteType}
                           colorHex={sku.colorHex}
                           size="sm"
                         />
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1">
-                            <span className="text-[10px] font-mono text-slate-500 font-medium">
-                              {sku.skuId} • {sku.archetype}
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[11px] font-medium text-slate-400">
+                              {sku.archetype}
                             </span>
                             <span className="text-xs font-mono font-bold text-emerald-700">
-                              +$
-                              {(sku.metrics.financialImpactUsd / 1000).toFixed(
-                                1
-                              )}
-                              K
+                              +${(sku.metrics.financialImpactUsd / 1000).toFixed(1)}K
                             </span>
                           </div>
-                          <h3 className="text-xs font-bold text-slate-900 truncate mt-0.5">
+
+                          <h3 className="text-sm font-bold text-slate-900 truncate mt-0.5">
                             {sku.name}
                           </h3>
 
-                          <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                          <div className="flex items-center justify-between gap-2 mt-2">
                             <span
-                              className={`px-2 py-0.5 rounded text-[10px] font-mono font-semibold border ${getActionBadgeStyle(
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${getActionBadgeStyle(
                                 sku.actionType
                               )}`}
                             >
                               {sku.actionType.replace(/_/g, ' ')}
                             </span>
 
-                            {sku.llmGuardrailStatus ===
-                            'APPROVED_BY_GUARDRAIL' ? (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-200">
-                                AI Context{' '}
-                                {sku.llmAdjustmentPct > 0
-                                  ? `+${sku.llmAdjustmentPct}%`
-                                  : `${sku.llmAdjustmentPct}%`}
-                              </span>
-                            ) : (
-                              <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-slate-100 text-slate-700 border border-slate-200">
-                                Guardrail: 0% Adjust
-                              </span>
-                            )}
-
-                            {status !== 'PENDING_REVIEW' && (
+                            {status !== 'PENDING_REVIEW' ? (
                               <span
-                                className={`ml-auto px-1.5 py-0.5 rounded text-[9.5px] font-mono font-bold ${
+                                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${
                                   status === 'APPROVED'
                                     ? 'bg-emerald-100 text-emerald-800'
                                     : status === 'MODIFIED'
@@ -1036,60 +966,36 @@ export function App() {
                                     : 'bg-amber-100 text-amber-800'
                                 }`}
                               >
+                                <Check className="w-2.5 h-2.5" />
                                 {status}
+                              </span>
+                            ) : (
+                              <span className="text-[11px] font-mono text-slate-400">
+                                WAPE {sku.metrics.addlWape}%
                               </span>
                             )}
                           </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-2 mt-2.5 pt-2 border-t border-slate-100 text-[10px] font-mono text-slate-500">
-                        <div>
-                          WAPE:{' '}
-                          <span className="text-rose-600 line-through">
-                            {sku.metrics.legacyWape}%
-                          </span>{' '}
-                          <strong className="text-emerald-700">
-                            {sku.metrics.addlWape}%
-                          </strong>
-                        </div>
-                        <div>
-                          In-Stock:{' '}
-                          <strong className="text-slate-800">
-                            {sku.metrics.availabilityBefore}%→
-                            {sku.metrics.availabilityAfter}%
-                          </strong>
-                        </div>
-                        <div className="text-right">
-                          Excess:{' '}
-                          <strong className="text-slate-800">
-                            {sku.metrics.excessWeeksBefore}→
-                            {sku.metrics.excessWeeksAfter}w
-                          </strong>
                         </div>
                       </div>
                     </div>
                   );
                 })}
 
-                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-center">
-                  <div className="text-xs font-bold text-slate-800 flex items-center justify-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                    161 Remaining SKUs Within Optimal Inventory Corridor
+                <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/60 flex items-center gap-3">
+                  <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
+                  <div className="text-xs text-slate-600 leading-relaxed">
+                    <strong className="text-slate-900">161 stable SKUs</strong> are automatically replenished within safety corridors.
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Auto-replenished via StatsForecast + Chronos-2 ensemble with zero
-                    manual overrides needed.
-                  </p>
                 </div>
               </div>
             </div>
 
-            {/* RIGHT COLUMN: SKU DECISION CARD + CENTRAL LLM REASONING + CANVAS (8 cols) */}
-            <div className="lg:col-span-8 space-y-4">
-              {/* 1. HERO RECOMMENDATION & HUMAN-IN-THE-LOOP APPROVAL CARD */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs">
-                <div className="flex flex-wrap items-start justify-between gap-4 pb-4 border-b border-slate-200">
+            {/* RIGHT COLUMN: FOCUSED SKU DECISION WORKSPACE (8 cols) */}
+            <div className="lg:col-span-8 space-y-5">
+              {/* STEP 1: THE EXECUTIVE DECISION BRIEF */}
+              <div className="card-surface rounded-2xl p-6">
+                {/* Product Header + Primary Approval Actions */}
+                <div className="flex flex-wrap items-start justify-between gap-4 pb-5 border-b border-slate-100">
                   <div className="flex items-center gap-4">
                     <FootwearVisual
                       silhouetteType={selectedSku.silhouetteType}
@@ -1099,50 +1005,41 @@ export function App() {
                     />
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-xs font-mono text-indigo-700 font-bold">
+                        <span className="text-xs font-mono font-semibold text-indigo-600">
                           {selectedSku.skuId}
                         </span>
-                        <span className="px-2 py-0.5 rounded-md text-[11px] font-mono bg-slate-100 text-slate-800 font-medium border border-slate-200">
-                          Archetype: {selectedSku.archetype}
+                        <span className="text-slate-300">•</span>
+                        <span className="text-xs font-medium text-slate-600">
+                          {selectedSku.archetype}
                         </span>
-                        <span className="px-2 py-0.5 rounded-md text-[11px] font-mono bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold">
-                          Target Quantile: P{whatIfQuantile}
-                        </span>
+                        <span className="text-slate-300">•</span>
                         <span className="text-xs text-slate-500">
-                          MSRP{' '}
-                          <strong className="text-slate-900">
-                            ${selectedSku.retailPrice}
-                          </strong>{' '}
-                          ({selectedSku.grossMarginPct}% GM)
+                          ${selectedSku.retailPrice} MSRP ({selectedSku.grossMarginPct}% Margin)
                         </span>
                       </div>
 
-                      <h2 className="text-lg font-bold text-slate-900 mt-1">
+                      <h2 className="text-xl font-bold text-slate-900 mt-1">
                         {selectedSku.name}
                       </h2>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        Cluster:{' '}
-                        <span className="text-slate-800 font-medium">
-                          {selectedSku.storeCluster}
-                        </span>{' '}
-                        • On-Hand:{' '}
-                        <strong className="text-slate-900">
-                          {selectedSku.currentInventory.toLocaleString()} u
-                        </strong>{' '}
-                        • On-Order:{' '}
-                        <strong className="text-slate-900">
-                          {selectedSku.onOrderUnits.toLocaleString()} u
-                        </strong>{' '}
-                        • Selling Window Left:{' '}
-                        <strong className="text-amber-700">
-                          {selectedSku.remainingSellingWeeks} wks
-                        </strong>
-                      </p>
+
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mt-1.5">
+                        <span>
+                          Cluster: <strong className="text-slate-800">{selectedSku.storeCluster}</strong>
+                        </span>
+                        <span>•</span>
+                        <span>
+                          On-Hand: <strong className="text-slate-800 font-mono">{selectedSku.currentInventory.toLocaleString()} u</strong>
+                        </span>
+                        <span>•</span>
+                        <span>
+                          Window Left: <strong className="text-amber-700 font-mono">{selectedSku.remainingSellingWeeks} wks</strong>
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Human-in-the-Loop Action Buttons */}
-                  <div className="flex flex-wrap items-center gap-2">
+                  {/* Clean Primary CTA Buttons */}
+                  <div className="flex items-center gap-2.5">
                     <button
                       onClick={() =>
                         recordDecision(
@@ -1154,36 +1051,34 @@ export function App() {
                           'Quantified ROI & Inventory Corridor Verified'
                         )
                       }
-                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-xs transition cursor-pointer"
+                      className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs flex items-center gap-2 shadow-xs transition cursor-pointer"
                     >
                       <Check className="w-4 h-4 stroke-[2.5]" />
                       {decisions[selectedSku.skuId] === 'APPROVED'
-                        ? 'Approved (Update)'
+                        ? 'Approved'
                         : whatIfQuantile !== selectedSku.targetQuantile ||
                           whatIfPromoLiftPct !== 0
-                        ? 'Approve Modified Action'
+                        ? 'Approve Modified Order'
                         : 'Approve Recommendation'}
                     </button>
 
                     <button
                       onClick={() => setShowOverridePrompt(!showOverridePrompt)}
-                      className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
+                      className="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
                     >
-                      <X className="w-3.5 h-3.5 text-rose-600" />
-                      Override with Reason
+                      <X className="w-3.5 h-3.5 text-slate-500" />
+                      Override
                     </button>
                   </div>
                 </div>
 
-                {/* Mandatory Reason Logging Drawer when Overriding */}
+                {/* Mandatory Governance Reason Drawer (Only when overriding) */}
                 {showOverridePrompt && (
-                  <div className="my-3 p-3.5 rounded-xl bg-rose-50 border border-rose-200 flex flex-wrap items-center justify-between gap-3">
+                  <div className="my-4 p-4 rounded-xl bg-rose-50/70 border border-rose-200 flex flex-wrap items-center justify-between gap-3 animate-fade-in">
                     <div className="flex items-center gap-2 text-xs text-rose-900">
                       <Lock className="w-4 h-4 text-rose-600 shrink-0" />
                       <span>
-                        <strong>Human-in-the-Loop Governance:</strong> Select
-                        mandatory reason code to log override for closed-loop
-                        feedback:
+                        <strong>Governance Log:</strong> Select reason code to record override:
                       </span>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -1192,7 +1087,7 @@ export function App() {
                         onChange={(e) =>
                           setSelectedOverrideReason(e.target.value)
                         }
-                        className="bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 font-medium"
+                        className="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-900 font-medium"
                       >
                         {OVERRIDE_REASONS.map((r) => (
                           <option key={r} value={r}>
@@ -1209,204 +1104,265 @@ export function App() {
                             `Planner Overrode AI Action — Held Status Quo ERP Plan`
                           )
                         }
-                        className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold cursor-pointer"
+                        className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold cursor-pointer"
                       >
-                        Confirm Override &amp; Log
+                        Confirm Override
                       </button>
                     </div>
                   </div>
                 )}
 
-                {/* Drafted Action Banner + Quantified Impact Delta */}
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mt-4">
-                  <div className="md:col-span-7 p-3.5 rounded-xl bg-indigo-50/70 border border-indigo-200">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-mono uppercase tracking-wider text-indigo-700 font-bold">
-                        Drafted ERP Execution Order ({selectedSku.transferRoute})
+                {/* AI Recommendation & 3 Key Outcomes */}
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 mt-5">
+                  <div className="md:col-span-7 p-4 rounded-xl bg-indigo-50/45 border border-indigo-100 flex flex-col justify-between">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-indigo-600">
+                        Recommended Action • Target P{whatIfQuantile}
                       </span>
-                      <span className="text-xs font-mono font-bold text-emerald-700">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-white text-indigo-700 border border-indigo-200/60">
                         {simulatedActionMetrics.adjustedUnits > 0
                           ? `+${simulatedActionMetrics.adjustedUnits.toLocaleString()} Units`
                           : `${simulatedActionMetrics.adjustedUnits.toLocaleString()} Units`}
                       </span>
                     </div>
-                    <div className="text-sm font-bold text-slate-900 mt-1">
+                    <div className="text-base font-bold text-slate-900 mt-1.5">
                       {selectedSku.actionTitle}
                     </div>
-                    <p className="text-xs text-slate-600 mt-1">
+                    <p className="text-xs text-slate-600 mt-1 leading-relaxed">
                       {selectedSku.actionSummary}
                     </p>
                   </div>
 
-                  {/* Quantified Business Outcome Pill Box */}
-                  <div className="md:col-span-5 grid grid-cols-3 gap-2">
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
-                      <span className="text-[10px] text-slate-500 font-medium">
-                        Availability
+                  {/* 3 Crisp Business Impact Cards */}
+                  <div className="md:col-span-5 grid grid-cols-3 gap-2.5">
+                    <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/60 flex flex-col justify-between">
+                      <span className="text-[11px] text-slate-500 font-medium">
+                        In-Stock
                       </span>
-                      <div className="text-sm font-mono font-bold text-emerald-700 mt-1">
-                        {selectedSku.metrics.availabilityBefore}% →{' '}
+                      <div className="text-base font-mono font-bold text-slate-900 mt-1">
                         {simulatedActionMetrics.availAfter}%
                       </div>
-                      <span className="text-[10px] font-mono text-slate-400">
-                        In-Stock Rate
+                      <span className="text-[10px] font-mono text-emerald-600 font-medium">
+                        was {selectedSku.metrics.availabilityBefore}%
                       </span>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex flex-col justify-between">
-                      <span className="text-[10px] text-slate-500 font-medium">
-                        Excess Supply
+                    <div className="p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/60 flex flex-col justify-between">
+                      <span className="text-[11px] text-slate-500 font-medium">
+                        Excess WOS
                       </span>
-                      <div className="text-sm font-mono font-bold text-indigo-700 mt-1">
-                        {selectedSku.metrics.excessWeeksBefore}w →{' '}
+                      <div className="text-base font-mono font-bold text-slate-900 mt-1">
                         {simulatedActionMetrics.excessAfter}w
                       </div>
-                      <span className="text-[10px] font-mono text-slate-400">
-                        End of Window
+                      <span className="text-[10px] font-mono text-indigo-600 font-medium">
+                        was {selectedSku.metrics.excessWeeksBefore}w
                       </span>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200 flex flex-col justify-between">
-                      <span className="text-[10px] text-emerald-800 font-medium">
-                        Net $ Impact
+                    <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200/70 flex flex-col justify-between">
+                      <span className="text-[11px] text-emerald-800 font-medium">
+                        Net Impact
                       </span>
-                      <div className="text-sm font-mono font-bold text-emerald-700 mt-1">
+                      <div className="text-base font-mono font-bold text-emerald-700 mt-1">
                         +${(simulatedActionMetrics.impactUsd / 1000).toFixed(1)}K
                       </div>
-                      <span className="text-[10px] font-mono text-emerald-700">
+                      <span className="text-[10px] text-emerald-700 font-medium">
                         Margin + Cash
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* 4-STAGE DECISION PIPELINE & CENTRAL LLM RATIONALE */}
-                <div className="mt-4 pt-4 border-t border-slate-200">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3">
-                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                      <div className="text-[10px] font-mono text-slate-500">
-                        1. Intake &amp; De-Censoring
-                      </div>
-                      <div className="text-xs font-bold text-slate-900 mt-0.5">
-                        {selectedSku.history.some((h) => h.isStockoutCensored)
-                          ? 'OOS Censored Days Reconstructed'
-                          : 'Clean Unconstrained POS'}
-                      </div>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                      <div className="text-[10px] font-mono text-slate-500">
-                        2. Probabilistic Router
-                      </div>
-                      <div className="text-xs font-bold text-indigo-700 mt-0.5 truncate">
-                        {activeLiveSynthesis?.tsfmEngineUsed ||
-                          selectedSku.routedModel}
-                      </div>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                      <div className="text-[10px] font-mono text-slate-500">
-                        3. Central LLM Guardrail
-                      </div>
-                      <div
-                        className={`text-xs font-bold mt-0.5 ${
-                          selectedSku.llmGuardrailStatus ===
-                          'APPROVED_BY_GUARDRAIL'
-                            ? 'text-fuchsia-700'
-                            : 'text-emerald-700'
-                        }`}
-                      >
-                        {selectedSku.llmGuardrailStatus ===
-                        'APPROVED_BY_GUARDRAIL'
-                          ? `Conf ${selectedSku.llmConfidence} ≥ 0.80 (${
-                              selectedSku.llmAdjustmentPct > 0
-                                ? `+${selectedSku.llmAdjustmentPct}%`
-                                : `${selectedSku.llmAdjustmentPct}%`
-                            })`
-                          : `Conf ${selectedSku.llmConfidence} < 0.80 (Held at 0%)`}
-                      </div>
-                    </div>
-
-                    <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                      <div className="text-[10px] font-mono text-slate-500">
-                        4. Asymmetric Risk Target
-                      </div>
-                      <div className="text-xs font-bold text-emerald-700 mt-0.5">
-                        P{whatIfQuantile} Quantile •{' '}
-                        {selectedSku.remainingSellingWeeks}w Window
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Explainable Rationale Box */}
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-xs leading-relaxed space-y-2">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-mono text-[11px] text-fuchsia-700 font-bold flex items-center gap-1.5">
-                        <Cpu className="w-3.5 h-3.5" />
-                        Context Signal: {selectedSku.llmTriggerEvent}
+                {/* Collapsible "Why AI Recommends This" Pipeline Disclosure */}
+                <div className="mt-4 pt-3 border-t border-slate-100">
+                  <button
+                    onClick={() => setShowPipelineDetails(!showPipelineDetails)}
+                    className="w-full flex items-center justify-between text-xs text-slate-600 hover:text-slate-900 py-1 cursor-pointer transition"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Cpu className="w-3.5 h-3.5 text-indigo-600" />
+                      <span className="font-semibold text-slate-800">
+                        AI Reasoning:
                       </span>
-                      <span className="font-mono text-[10px] px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold">
-                        {activeLiveSynthesis
-                          ? `${activeLiveSynthesis.llmProviderUsed} (${activeLiveSynthesis.totalLatencyMs}ms)`
-                          : `Central LLM (${openrouterModel.split('/').pop()})`}
+                      <span className="text-slate-600 truncate max-w-xl">
+                        {selectedSku.llmTriggerEvent}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-slate-100 text-slate-700">
+                        {selectedSku.routedModel}
                       </span>
                     </div>
-                    <p className="text-slate-700">{selectedSku.llmRationale}</p>
+                    <span className="inline-flex items-center gap-1 text-indigo-600 font-semibold shrink-0">
+                      {showPipelineDetails ? (
+                        <>
+                          Hide 4-Stage Pipeline <ChevronUp className="w-3.5 h-3.5" />
+                        </>
+                      ) : (
+                        <>
+                          Inspect 4-Stage AI Pipeline <ChevronDown className="w-3.5 h-3.5" />
+                        </>
+                      )}
+                    </span>
+                  </button>
 
-                    {activeLiveSynthesis && (
-                      <div className="pt-2 border-t border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div className="p-2.5 rounded-lg bg-white border border-slate-200">
-                          <div className="text-[10px] font-mono uppercase text-indigo-700 font-bold mb-1">
-                            Newsvendor Asymmetric Risk Trade-Off:
+                  {showPipelineDetails && (
+                    <div className="mt-3 pt-3 border-t border-slate-100 space-y-3 animate-fade-in">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/70">
+                          <div className="text-[10px] font-mono text-slate-400">
+                            1. De-Censoring
                           </div>
-                          <p className="text-[11px] text-slate-700">
-                            {activeLiveSynthesis.riskTradeoffSummary}
-                          </p>
+                          <div className="text-xs font-bold text-slate-900 mt-0.5">
+                            {selectedSku.history.some((h) => h.isStockoutCensored)
+                              ? 'OOS Censored Days Reconstructed'
+                              : 'Clean Unconstrained POS'}
+                          </div>
                         </div>
-                        <div className="p-2.5 rounded-lg bg-white border border-slate-200">
-                          <div className="text-[10px] font-mono uppercase text-emerald-700 font-bold mb-1">
-                            ERP Write-Back Execution Steps:
+
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/70">
+                          <div className="text-[10px] font-mono text-slate-400">
+                            2. Champion Router
                           </div>
-                          <ul className="space-y-1 text-[11px] text-slate-700">
-                            {activeLiveSynthesis.erpExecutionSteps.map(
-                              (st, idx) => (
-                                <li
-                                  key={idx}
-                                  className="flex items-start gap-1.5"
-                                >
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                                  <span>{st}</span>
-                                </li>
-                              )
-                            )}
-                          </ul>
+                          <div className="text-xs font-bold text-indigo-700 mt-0.5 truncate">
+                            {activeLiveSynthesis?.tsfmEngineUsed ||
+                              selectedSku.routedModel}
+                          </div>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/70">
+                          <div className="text-[10px] font-mono text-slate-400">
+                            3. Context Guardrail
+                          </div>
+                          <div className="text-xs font-bold text-slate-900 mt-0.5">
+                            {selectedSku.llmGuardrailStatus ===
+                            'APPROVED_BY_GUARDRAIL'
+                              ? `Conf ${selectedSku.llmConfidence} (${
+                                  selectedSku.llmAdjustmentPct > 0
+                                    ? `+${selectedSku.llmAdjustmentPct}%`
+                                    : `${selectedSku.llmAdjustmentPct}%`
+                                })`
+                              : `Conf ${selectedSku.llmConfidence} (Held 0%)`}
+                          </div>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200/70">
+                          <div className="text-[10px] font-mono text-slate-400">
+                            4. Newsvendor Target
+                          </div>
+                          <div className="text-xs font-bold text-emerald-700 mt-0.5">
+                            P{whatIfQuantile} Quantile
+                          </div>
                         </div>
                       </div>
-                    )}
-                  </div>
+
+                      <div className="p-3.5 rounded-xl bg-slate-50/70 border border-slate-200/70 text-xs text-slate-700 leading-relaxed space-y-2">
+                        <p>{selectedSku.llmRationale}</p>
+                        {activeLiveSynthesis && (
+                          <div className="pt-2 border-t border-slate-200/70 grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <div className="text-[10px] font-mono uppercase text-indigo-700 font-bold mb-1">
+                                Risk Trade-Off:
+                              </div>
+                              <p className="text-[11px] text-slate-600">
+                                {activeLiveSynthesis.riskTradeoffSummary}
+                              </p>
+                            </div>
+                            <div>
+                              <div className="text-[10px] font-mono uppercase text-emerald-700 font-bold mb-1">
+                                ERP Execution Steps:
+                              </div>
+                              <ul className="space-y-1 text-[11px] text-slate-600">
+                                {activeLiveSynthesis.erpExecutionSteps.map(
+                                  (st, idx) => (
+                                    <li key={idx} className="flex items-start gap-1.5">
+                                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                                      <span>{st}</span>
+                                    </li>
+                                  )
+                                )}
+                              </ul>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* 2. INTERACTIVE PROBABILISTIC FORECAST & INVENTORY SAWTOOTH CANVAS */}
-              <ForecastCanvas
-                sku={selectedSku}
-                whatIfPromoLiftPct={whatIfPromoLiftPct}
-                whatIfMarkdownPct={whatIfMarkdownPct}
-                whatIfTargetQuantile={whatIfQuantile}
-                activeLiveSignal={activeLiveSignal}
-              />
+              {/* STEP 2: FOCUSED WORKSPACE MODE BAR (PROGRESSIVE DISCLOSURE) */}
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="inline-flex bg-slate-200/60 p-1 rounded-xl border border-slate-200/80">
+                  <button
+                    onClick={() => setSkuSubTab('trajectory')}
+                    className={`px-4 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-2 cursor-pointer ${
+                      skuSubTab === 'trajectory'
+                        ? 'bg-white text-slate-900 shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <LineChart className="w-3.5 h-3.5 text-indigo-600" />
+                    1. Forecast &amp; Inventory Curves
+                  </button>
 
-              {/* 3. BOTTOM SPLIT: CENTRAL LLM SCENARIO ENGINE + NATURAL LANGUAGE COPILOT */}
-              <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
-                {/* Central LLM What-If & Disruption Reasoning Engine (5 cols) */}
-                <div className="xl:col-span-5 bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-200">
-                      <div className="flex items-center gap-2">
-                        <Sliders className="w-4 h-4 text-indigo-600" />
-                        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900">
-                          Central LLM Scenario &amp; What-If Engine
+                  <button
+                    onClick={() => setSkuSubTab('simulator')}
+                    className={`px-4 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-2 cursor-pointer ${
+                      skuSubTab === 'simulator'
+                        ? 'bg-white text-slate-900 shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Sliders className="w-3.5 h-3.5 text-emerald-600" />
+                    2. What-If &amp; AI Scenario Simulator
+                  </button>
+
+                  <button
+                    onClick={() => setSkuSubTab('copilot')}
+                    className={`px-4 py-2 rounded-lg text-xs font-semibold transition flex items-center gap-2 cursor-pointer ${
+                      skuSubTab === 'copilot'
+                        ? 'bg-white text-slate-900 shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    <Bot className="w-3.5 h-3.5 text-fuchsia-600" />
+                    3. Ask AI Copilot &amp; Audit Log
+                  </button>
+                </div>
+
+                {skuSubTab === 'trajectory' && (
+                  <button
+                    onClick={() => setSkuSubTab('simulator')}
+                    className="text-xs font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Simulate Promo, Weather, or Supply Chain Shock →
+                  </button>
+                )}
+              </div>
+
+              {/* SUB-VIEW 1: CLEAN FORECAST & INVENTORY TRAJECTORY */}
+              {skuSubTab === 'trajectory' && (
+                <ForecastCanvas
+                  sku={selectedSku}
+                  whatIfPromoLiftPct={whatIfPromoLiftPct}
+                  whatIfMarkdownPct={whatIfMarkdownPct}
+                  whatIfTargetQuantile={whatIfQuantile}
+                  activeLiveSignal={activeLiveSignal}
+                />
+              )}
+
+              {/* SUB-VIEW 2: INTERACTIVE WHAT-IF & AI SCENARIO SIMULATOR */}
+              {skuSubTab === 'simulator' && (
+                <div className="space-y-5 animate-fade-in">
+                  <div className="card-surface rounded-2xl p-6 space-y-5">
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-4">
+                      <div>
+                        <h3 className="text-base font-bold text-slate-900">
+                          Interactive What-If &amp; Disruption Simulator
                         </h3>
+                        <p className="text-xs text-slate-500 mt-0.5">
+                          Test live market events, custom natural-language scenarios, or service quantile shifts
+                        </p>
                       </div>
                       <button
                         onClick={() => {
@@ -1418,147 +1374,184 @@ export function App() {
                           setActiveLiveSignalId(null);
                           setCustomScenarioPrompt('');
                         }}
-                        className="text-[11px] font-mono text-slate-500 hover:text-slate-900 flex items-center gap-1 cursor-pointer"
+                        className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-medium text-slate-600 flex items-center gap-1.5 cursor-pointer transition"
                       >
-                        <RotateCcw className="w-3 h-3" /> Reset
+                        <RotateCcw className="w-3.5 h-3.5" /> Reset Parameters
                       </button>
                     </div>
 
-                    {/* Custom Unstructured Disruption Prompt for Central AI Engine */}
-                    <div className="mb-3 p-3 rounded-xl bg-indigo-50/60 border border-indigo-200 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="block text-[11px] font-bold text-indigo-950">
-                          Evaluate Market / Supply Chain Event via Central AI:
-                        </label>
+                    {/* Quick Market Context Chips */}
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 mb-2">
+                        Quick Market &amp; Supply Chain Signals
+                      </label>
+                      <div className="flex flex-wrap gap-2">
+                        {MARKET_CONTEXT_EVENTS.map((sig) => (
+                          <button
+                            key={sig.id}
+                            onClick={() => {
+                              const nextId =
+                                activeLiveSignalId === sig.id ? null : sig.id;
+                              setActiveLiveSignalId(nextId);
+                              if (nextId) {
+                                setCustomScenarioPrompt(sig.label);
+                              }
+                            }}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-medium transition border flex items-center gap-1.5 cursor-pointer ${
+                              activeLiveSignalId === sig.id
+                                ? 'bg-indigo-600 border-indigo-600 text-white shadow-2xs'
+                                : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                            }`}
+                          >
+                            <Flame className="w-3.5 h-3.5" />
+                            {sig.label}
+                          </button>
+                        ))}
                       </div>
-                      <textarea
-                        rows={2}
-                        value={customScenarioPrompt}
-                        onChange={(e) => setCustomScenarioPrompt(e.target.value)}
-                        placeholder="Describe any promo change, weather shift, vendor delay, or competitor stockout..."
-                        className="w-full rounded-lg bg-white border border-indigo-200 px-2.5 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500"
-                      />
-                      <button
-                        onClick={() => handleRunCentralLlmWhatIf()}
-                        disabled={isRunningLlmAgent}
-                        className="w-full py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold flex items-center justify-center gap-1.5 shadow-2xs transition cursor-pointer disabled:opacity-60"
-                      >
-                        {isRunningLlmAgent ? (
-                          <>
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            Synthesizing Context &amp; Quantiles...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="w-3.5 h-3.5" />
-                            Run AI Context &amp; Quantile Synthesis
-                          </>
-                        )}
-                      </button>
                     </div>
 
-                    <div className="space-y-3">
-                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-slate-700 font-medium">
-                            Target Service Quantile (Asymmetric Risk)
-                          </span>
-                          <span className="font-mono font-bold text-indigo-700">
-                            P{whatIfQuantile}
-                          </span>
+                    {/* Custom Scenario Prompt + Sliders */}
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-6 pt-2">
+                      {/* Left: Natural Language Event Box */}
+                      <div className="md:col-span-6 p-4 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col justify-between space-y-3">
+                        <div className="space-y-2">
+                          <label className="block text-xs font-bold text-slate-800">
+                            Simulate Custom Retail Disruption via Central AI
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={customScenarioPrompt}
+                            onChange={(e) =>
+                              setCustomScenarioPrompt(e.target.value)
+                            }
+                            placeholder="e.g., Influencer campaign drives +25% coastal demand while port congestion delays inbound ASN by 1 week..."
+                            className="w-full rounded-xl bg-white border border-slate-200 px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500"
+                          />
                         </div>
-                        <input
-                          type="range"
-                          min={30}
-                          max={90}
-                          step={5}
-                          value={whatIfQuantile}
-                          onChange={(e) =>
-                            setWhatIfQuantile(Number(e.target.value))
-                          }
-                          className="w-full accent-indigo-600 cursor-pointer"
-                        />
-                        <div className="flex justify-between text-[10px] font-mono text-slate-500 mt-0.5">
-                          <span>P35 (Lean / End-of-Season)</span>
-                          <span>P85 (Protect Promo Margin)</span>
-                        </div>
+                        <button
+                          onClick={() => handleRunCentralLlmWhatIf()}
+                          disabled={isRunningLlmAgent}
+                          className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold flex items-center justify-center gap-2 shadow-xs transition cursor-pointer disabled:opacity-60"
+                        >
+                          {isRunningLlmAgent ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              Synthesizing Quantiles &amp; Guardrail...
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-4 h-4" />
+                              Run AI Scenario Synthesis
+                            </>
+                          )}
+                        </button>
                       </div>
 
-                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-slate-700 font-medium">
-                            Promotional / Traffic Lift Delta
-                          </span>
-                          <span className="font-mono font-bold text-emerald-700">
-                            {whatIfPromoLiftPct >= 0
-                              ? `+${whatIfPromoLiftPct}%`
-                              : `${whatIfPromoLiftPct}%`}
-                          </span>
+                      {/* Right: 3 Clean Parameter Sliders */}
+                      <div className="md:col-span-6 space-y-4">
+                        <div>
+                          <div className="flex justify-between text-xs mb-1.5">
+                            <span className="text-slate-700 font-medium">
+                              Target Service Quantile (Asymmetric Risk)
+                            </span>
+                            <span className="font-mono font-bold text-indigo-600">
+                              P{whatIfQuantile}
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min={30}
+                            max={90}
+                            step={5}
+                            value={whatIfQuantile}
+                            onChange={(e) =>
+                              setWhatIfQuantile(Number(e.target.value))
+                            }
+                            className="w-full cursor-pointer"
+                          />
+                          <div className="flex justify-between text-[10px] text-slate-400 mt-1">
+                            <span>P35 (Lean End-of-Season)</span>
+                            <span>P85 (Protect Peak Margin)</span>
+                          </div>
                         </div>
-                        <input
-                          type="range"
-                          min={-20}
-                          max={35}
-                          step={5}
-                          value={whatIfPromoLiftPct}
-                          onChange={(e) =>
-                            setWhatIfPromoLiftPct(Number(e.target.value))
-                          }
-                          className="w-full accent-emerald-600 cursor-pointer"
-                        />
-                      </div>
 
-                      <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                        <div className="flex justify-between text-xs mb-1">
-                          <span className="text-slate-700 font-medium">
-                            Price Markdown Depth (Elasticity Simulation)
-                          </span>
-                          <span className="font-mono font-bold text-amber-700">
-                            {whatIfMarkdownPct}% Off
-                          </span>
+                        <div>
+                          <div className="flex justify-between text-xs mb-1.5">
+                            <span className="text-slate-700 font-medium">
+                              Promotional / Traffic Lift Delta
+                            </span>
+                            <span className="font-mono font-bold text-emerald-600">
+                              {whatIfPromoLiftPct >= 0
+                                ? `+${whatIfPromoLiftPct}%`
+                                : `${whatIfPromoLiftPct}%`}
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min={-20}
+                            max={35}
+                            step={5}
+                            value={whatIfPromoLiftPct}
+                            onChange={(e) =>
+                              setWhatIfPromoLiftPct(Number(e.target.value))
+                            }
+                            className="w-full cursor-pointer"
+                          />
                         </div>
-                        <input
-                          type="range"
-                          min={0}
-                          max={40}
-                          step={5}
-                          value={whatIfMarkdownPct}
-                          onChange={(e) =>
-                            setWhatIfMarkdownPct(Number(e.target.value))
-                          }
-                          className="w-full accent-amber-600 cursor-pointer"
-                        />
+
+                        <div>
+                          <div className="flex justify-between text-xs mb-1.5">
+                            <span className="text-slate-700 font-medium">
+                              Price Markdown Depth
+                            </span>
+                            <span className="font-mono font-bold text-amber-600">
+                              {whatIfMarkdownPct}% Off
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min={0}
+                            max={40}
+                            step={5}
+                            value={whatIfMarkdownPct}
+                            onChange={(e) =>
+                              setWhatIfMarkdownPct(Number(e.target.value))
+                            }
+                            className="w-full cursor-pointer"
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-3 p-2.5 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-between text-xs">
-                    <span className="text-slate-700 font-medium">
-                      Simulated Execution Quantity:
-                    </span>
-                    <span className="font-mono font-bold text-emerald-700">
-                      {simulatedActionMetrics.adjustedUnits > 0
-                        ? `+${simulatedActionMetrics.adjustedUnits} u`
-                        : `${simulatedActionMetrics.adjustedUnits} u`}{' '}
-                      (${(simulatedActionMetrics.impactUsd / 1000).toFixed(1)}K
-                      Net Value)
-                    </span>
-                  </div>
+                  {/* Live Chart Below Simulator so User Sees Curves Shift Immediately */}
+                  <ForecastCanvas
+                    sku={selectedSku}
+                    whatIfPromoLiftPct={whatIfPromoLiftPct}
+                    whatIfMarkdownPct={whatIfMarkdownPct}
+                    whatIfTargetQuantile={whatIfQuantile}
+                    activeLiveSignal={activeLiveSignal}
+                  />
                 </div>
+              )}
 
-                {/* Natural Language Planner Copilot & Governance Audit Log (7 cols) */}
-                <div className="xl:col-span-7">
+              {/* SUB-VIEW 3: MERCHANDISING AI COPILOT & GOVERNANCE LOG */}
+              {skuSubTab === 'copilot' && (
+                <div className="animate-fade-in">
                   <PlannerCopilot
                     skus={skus}
                     selectedSku={selectedSku}
-                    onSelectSku={handleSelectSku}
+                    onSelectSku={(id) => {
+                      handleSelectSku(id);
+                      setSkuSubTab('trajectory');
+                    }}
                     auditLogs={auditLogs}
                     openrouterModel={
                       customModelInput.trim() || openrouterModel
                     }
                   />
                 </div>
-              </div>
+              )}
             </div>
           </div>
         )}
