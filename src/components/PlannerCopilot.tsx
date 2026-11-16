@@ -27,7 +27,13 @@ interface ChatMessage {
   relatedSkuId?: string;
 }
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8005';
+const IS_LOCALHOST =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1');
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL ??
+  (IS_LOCALHOST ? 'http://localhost:8005' : '');
 
 const PRESET_QUERIES = [
   'Which SKUs face stockout risk during upcoming promotions?',
@@ -85,9 +91,13 @@ export const PlannerCopilot: React.FC<PlannerCopilotProps> = ({
         financialImpactUsd: s.metrics.financialImpactUsd,
       }));
 
+      const savedKey = localStorage.getItem('pandita_ai_api_key') || '';
       const resp = await fetch(`${API_BASE}/api/agent/copilot`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(savedKey ? { 'x-ai-api-key': savedKey } : {}),
+        },
         body: JSON.stringify({
           query: q,
           selectedSku,

@@ -42,7 +42,13 @@ import {
 } from 'lucide-react';
 
 const initialDataset = rawDataset as unknown as RetailDemoDataset;
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8005';
+const IS_LOCALHOST =
+  typeof window !== 'undefined' &&
+  (window.location.hostname === 'localhost' ||
+    window.location.hostname === '127.0.0.1');
+const API_BASE =
+  import.meta.env.VITE_API_BASE_URL ??
+  (IS_LOCALHOST ? 'http://localhost:8005' : '');
 
 type ActiveTab = 'workspace' | 'coldstart' | 'routing' | 'connectors';
 type SkuWorkspaceSubTab = 'trajectory' | 'simulator' | 'copilot';
@@ -136,15 +142,24 @@ export function App() {
   >({});
 
   useEffect(() => {
-    fetch(`${API_BASE}/api/ai-status`)
+    const savedKey = localStorage.getItem('pandita_ai_api_key') || '';
+    const savedModel = localStorage.getItem('pandita_ai_model') || '';
+    if (savedModel) {
+      setOpenrouterModel(savedModel);
+    }
+    fetch(`${API_BASE}/api/ai-status`, {
+      headers: savedKey ? { 'x-ai-api-key': savedKey } : {},
+    })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data) {
-          setOpenrouterConfigured(Boolean(data.openrouterConfigured));
+          setOpenrouterConfigured(
+            Boolean(data.openrouterConfigured || savedKey.length > 10)
+          );
           if (data.maskedKey) {
             setOpenrouterApiKeyInput(data.maskedKey);
           }
-          if (data.openrouterModel) {
+          if (data.openrouterModel && !savedModel) {
             setOpenrouterModel(data.openrouterModel);
           }
         }
@@ -159,13 +174,23 @@ export function App() {
     setIsSavingConfig(true);
     setConfigFeedback(null);
     const modelToSave = customModelInput.trim() || openrouterModel;
+    const trimmedKey = openrouterApiKeyInput.trim();
+    if (trimmedKey && !trimmedKey.includes('...')) {
+      localStorage.setItem('pandita_ai_api_key', trimmedKey);
+    }
+    localStorage.setItem('pandita_ai_model', modelToSave);
 
     try {
       const resp = await fetch(`${API_BASE}/api/config`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(localStorage.getItem('pandita_ai_api_key')
+            ? { 'x-ai-api-key': localStorage.getItem('pandita_ai_api_key')! }
+            : {}),
+        },
         body: JSON.stringify({
-          openrouterApiKey: openrouterApiKeyInput.trim(),
+          openrouterApiKey: trimmedKey,
           openrouterModel: modelToSave,
           testConnection: true,
         }),
@@ -277,9 +302,13 @@ export function App() {
       overridePrompt !== undefined ? overridePrompt : customScenarioPrompt;
 
     try {
+      const savedKey = localStorage.getItem('pandita_ai_api_key') || '';
       const resp = await fetch(`${API_BASE}/api/agent/what-if`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(savedKey ? { 'x-ai-api-key': savedKey } : {}),
+        },
         body: JSON.stringify({
           sku: selectedSku,
           whatIfQuantile,
