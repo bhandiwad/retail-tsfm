@@ -566,6 +566,119 @@ Return the JSON response."""
     }
 
 
+class ExplainCitiesRequest(BaseModel):
+    cityA: dict[str, Any]
+    cityB: dict[str, Any]
+    openrouterModelOverride: Optional[str] = None
+    openrouterKeyOverride: Optional[str] = None
+
+
+@app.post("/api/mobile/explain-cities")
+async def explain_cities_agent(req: ExplainCitiesRequest):
+    ca = req.cityA
+    cb = req.cityB
+    system_prompt = """You are a plain-English Indian Smartphone Retail Sales Analyst.
+Compare City A and City B using the exact store coverage, SIM activations, Black 256GB stock, shopkeeper margin vs rival margin, Bajaj/TVS 0% EMI store coverage, promoter count, and service turnaround days provided.
+Keep language simple, direct, and free of academic jargon.
+Respond ONLY with valid JSON:
+{
+  "headline": "<1 clear sentence explaining why different models win in the two cities>",
+  "summaryPlain": "<2 simple sentences summarizing what is happening on the ground>",
+  "actionSteps": [
+    "<action 1 with concrete numbers>",
+    "<action 2 with concrete numbers>",
+    "<action 3 with concrete numbers>"
+  ]
+}"""
+    user_prompt = f"""Compare these two Indian smartphone markets:
+City A ({ca.get('cityName')}, {ca.get('state')}):
+- Active Shops: {ca.get('activeBillingShops')}/{ca.get('totalMobileShops')}, 0% EMI Shops: {ca.get('nbfcZeroDownShopsPct')}%, Promoters: {ca.get('inShopPromoters')}, Service Wait: {ca.get('avgServiceTurnaroundDays')} days
+- Top Model: {ca.get('topSellingModel')}
+- Model Breakdown: {json.dumps(ca.get('modelBreakdown', {}))}
+- Field Notes: {json.dumps(ca.get('fieldNotes', []))}
+
+City B ({cb.get('cityName')}, {cb.get('state')}):
+- Active Shops: {cb.get('activeBillingShops')}/{cb.get('totalMobileShops')}, 0% EMI Shops: {cb.get('nbfcZeroDownShopsPct')}%, Promoters: {cb.get('inShopPromoters')}, Service Wait: {cb.get('avgServiceTurnaroundDays')} days
+- Top Model: {cb.get('topSellingModel')}
+- Model Breakdown: {json.dumps(cb.get('modelBreakdown', {}))}
+- Field Notes: {json.dumps(cb.get('fieldNotes', []))}"""
+
+    raw_text, provider_used, _ = await call_openrouter_llm(
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        model_override=req.openrouterModelOverride,
+        key_override=req.openrouterKeyOverride,
+    )
+    if raw_text:
+        try:
+            cleaned = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw_text.strip(), flags=re.MULTILINE)
+            s_idx, e_idx = cleaned.find("{"), cleaned.rfind("}")
+            if s_idx != -1 and e_idx != -1:
+                parsed = json.loads(cleaned[s_idx : e_idx + 1])
+                parsed["providerUsed"] = provider_used
+                return parsed
+        except Exception:
+            pass
+
+    ca_curve = ca.get("modelBreakdown", {}).get("Curve 5G (₹18k)", {})
+    cb_curve = cb.get("modelBreakdown", {}).get("Curve 5G (₹18k)", {})
+    return {
+        "providerUsed": provider_used,
+        "headline": (
+            f"{ca.get('cityName')} activates {ca_curve.get('activatedUnits', 0):,} units of Curve 5G vs "
+            f"{cb_curve.get('activatedUnits', 0):,} in {cb.get('cityName')} due to EMI store readiness, variant stock, and dealer margin gaps."
+        ),
+        "summaryPlain": (
+            f"In {ca.get('cityName')}, {ca.get('nbfcZeroDownShopsPct')}% of shops offer 0-down-payment EMI and hold {ca_curve.get('black256Stock', 0)} Black 256GB units. "
+            f"In {cb.get('cityName')}, only {cb.get('nbfcZeroDownShopsPct')}% of shops have 0% EMI mapped, Black 256GB stock is at {cb_curve.get('black256Stock', 0)} units, and rival shop margin is ₹{cb_curve.get('rivalMarginInr', 1480)} vs ₹{cb_curve.get('effectiveShopMarginInr', 1169)}."
+        ),
+        "actionSteps": [
+            f"Transfer 300+ units of Curve 5G Black 256GB into {cb.get('distributorName')} within 24–48 hours.",
+            f"Send WhatsApp Slab Bonus nudge (+₹350/unit) to active {cb.get('cityName')} retailers within 4 units of monthly target.",
+            f"Activate Bajaj/TVS 0-down-payment QR mapping across top 150 {cb.get('cityName')} general trade counters.",
+        ],
+    }
+
+
+class WhatsappSimRequest(BaseModel):
+    retailer: dict[str, Any]
+    shopkeeperMessage: str
+    openrouterModelOverride: Optional[str] = None
+    openrouterKeyOverride: Optional[str] = None
+
+
+@app.post("/api/mobile/whatsapp-simulate")
+async def simulate_whatsapp_agent(req: WhatsappSimRequest):
+    ret = req.retailer
+    system_prompt = """You are a helpful WhatsApp Sales Assistant for Zenith Mobile talking to an Indian mobile shopkeeper.
+Use friendly Hinglish or simple English matching the shopkeeper's message.
+Reference their exact monthly slab target, how many units away they are, the exact ₹ bonus credit note they unlock, and distributor delivery timing. Keep it concise (3-5 short lines with WhatsApp formatting)."""
+    user_prompt = f"""Shop: {ret.get('shopName')} ({ret.get('area')}), Owner: {ret.get('ownerName')}
+Distributor: {ret.get('distributorName')}
+Monthly Slab: {ret.get('slabName')} | Target: {ret.get('targetUnits')} | Activated so far: {ret.get('activatedUnits')} | Gap: {ret.get('gapUnits')} phones
+Total Credit Note Unlocked at Target: ₹{ret.get('totalBonusUnlockedInr')} (₹{ret.get('bonusPerUnitInr')}/phone)
+Shopkeeper just sent: "{req.shopkeeperMessage}"
+Write the WhatsApp reply."""
+
+    raw_text, provider_used, _ = await call_openrouter_llm(
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        model_override=req.openrouterModelOverride,
+        key_override=req.openrouterKeyOverride,
+    )
+    if raw_text and len(raw_text.strip()) > 10:
+        return {"providerUsed": provider_used, "reply": raw_text.strip()}
+
+    return {
+        "providerUsed": provider_used,
+        "reply": (
+            f"Bilkul {ret.get('ownerName', 'Sir')} ji! 🙏 Aap abhi *{ret.get('activatedUnits')}/{ret.get('targetUnits')} activations* par hain — "
+            f"sirf *{ret.get('gapUnits')} phone* aur activate hote hi poore *₹{ret.get('totalBonusUnlockedInr', 8750):,} ka Credit Note* aapke account mein jud jayega 💰.\n"
+            f"Main abhi *{ret.get('distributorName')}* se aapki shop ke liye stock dispatch note lagwa raha hoon (sham 5 baje tak delivery)!"
+        ),
+    }
+
+
 if DIST_DIR.exists():
     app.mount("/", StaticFiles(directory=str(DIST_DIR), html=True), name="static")
 

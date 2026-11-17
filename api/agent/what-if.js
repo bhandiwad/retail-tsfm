@@ -133,23 +133,23 @@ Rule: If llmConfidence < 0.80, set guardrailStatus to "BLOCKED_BY_GUARDRAIL" and
         : sku.actionTitle,
       recommendedUnitsDelta: newDelta,
       recommendedMarkdownPct: whatIfMarkdownPct,
-      executiveRationale: `Synthesized Chronos-2 quantiles with de-censored demand (${censoredCount} OOS units recovered). ${
+      executiveRationale: `Restored ${censoredCount} missed sales from past zero-stock weeks. ${
         customEventPrompt
-          ? `Evaluated scenario '${customEventPrompt}': `
+          ? `Included scenario '${customEventPrompt}': `
           : ''
-      }Targeting P${whatIfQuantile} balances ${sku.grossMarginPct}% gross margin protection against ${sku.remainingSellingWeeks}-week remaining season window.`,
-      riskTradeoffSummary: `At ${sku.grossMarginPct}% gross margin ($${sku.retailPrice} MSRP), lost-sale underage cost outweighs end-of-window holding cost at P${whatIfQuantile}.`,
+      }A ${whatIfQuantile}% stock safety target protects ${sku.grossMarginPct}% product margin across the remaining ${sku.remainingSellingWeeks}-week selling window.`,
+      riskTradeoffSummary: `At ${sku.grossMarginPct}% margin ($${sku.retailPrice} retail price), avoiding lost sales is worth far more than holding extra stock at ${whatIfQuantile}% safety.`,
       erpExecutionSteps: [
-        `Stage ${newDelta > 0 ? `+${newDelta}` : newDelta} units via ${sku.transferRoute}`,
-        `Lock P${whatIfQuantile} safety stock buffer across ${sku.storeCluster}`,
-        `Monitor 7-day sell-through velocity against Chronos P50 trajectory`,
+        `Order/move ${newDelta > 0 ? `+${newDelta}` : newDelta} units via ${sku.transferRoute}`,
+        `Set ${whatIfQuantile}% safety stock buffer across ${sku.storeCluster}`,
+        `Track weekly sell-through against expected sales range`,
       ],
     };
   }
 
   return res.status(200).json({
     llmProviderUsed: providerUsed,
-    tsfmEngineUsed: 'Chronos-2 Quantile & De-Censoring Engine',
+    tsfmEngineUsed: 'AI Pattern & Zero-Stock Fix Engine',
     totalLatencyMs: Date.now() - t0,
     localForecast: {
       chronosP10,

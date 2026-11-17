@@ -36,10 +36,10 @@ const API_BASE =
   (IS_LOCALHOST ? 'http://localhost:8005' : '');
 
 const PRESET_QUERIES = [
-  'Which SKUs face stockout risk during upcoming promotions?',
-  'Why did the LLM guardrail block adjustment on Navy Slip-Ons?',
-  'Compare 15% early markdown vs late clearance on Terracotta Suede Mules',
-  'Calculate asymmetric underage vs overage risk on the selected SKU',
+  'Which products might run out of stock during upcoming promotions?',
+  'Why did AI ignore the unverified rumor on Navy Slip-Ons?',
+  'Compare a 15% early discount vs. waiting for late-season clearance',
+  'What is the risk of ordering too little vs. too much on this item?',
 ];
 
 export const PlannerCopilot: React.FC<PlannerCopilotProps> = ({
@@ -58,12 +58,12 @@ export const PlannerCopilot: React.FC<PlannerCopilotProps> = ({
     {
       id: 'welcome',
       role: 'assistant',
-      providerBadge: 'Central AI Merchandising Agent',
-      text: `Monitoring 168 Footwear & Lifestyle SKUs across 120 retail doors and DTC e-commerce. ${skus.length} high-impact inventory exceptions require review today. Ask any question about SKU demand trajectories, stockout de-censoring, open-to-buy impact, or markdown timing.`,
+      providerBadge: 'AI Planning Assistant',
+      text: `Tracking 168 items across 120 stores and online sales. ${skus.length} items need your review today. Ask any question about weekly sales forecasts, missed stockout demand, order quantities, or discount timing.`,
       highlightMetrics: [
-        { label: 'Active Exceptions', value: `${skus.length} SKUs` },
-        { label: 'Quantified Opportunity', value: '$352,400+' },
-        { label: 'Guardrail Blocks', value: '2 Noisy Signals Held' },
+        { label: 'Items to Review', value: `${skus.length} Items` },
+        { label: 'Savings Opportunity', value: '$352,400+' },
+        { label: 'Noise Filtered', value: '2 Rumors Ignored' },
       ],
     },
   ]);
@@ -155,7 +155,7 @@ export const PlannerCopilot: React.FC<PlannerCopilotProps> = ({
             }`}
           >
             <Bot className="w-3.5 h-3.5 text-indigo-600" />
-            Merchandising AI Copilot
+            Ask AI Assistant
           </button>
           <button
             onClick={() => setActiveSubTab('audit')}
@@ -166,7 +166,7 @@ export const PlannerCopilot: React.FC<PlannerCopilotProps> = ({
             }`}
           >
             <History className="w-3.5 h-3.5 text-emerald-600" />
-            Governance Ledger ({auditLogs.length})
+            Approval Log ({auditLogs.length})
           </button>
         </div>
 
@@ -240,7 +240,7 @@ export const PlannerCopilot: React.FC<PlannerCopilotProps> = ({
             {isLoading && (
               <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs text-indigo-700 font-medium flex items-center gap-2">
                 <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
-                Analyzing live SKU quantiles &amp; inventory telemetry...
+                Checking sales history &amp; stock levels...
               </div>
             )}
           </div>
@@ -256,7 +256,7 @@ export const PlannerCopilot: React.FC<PlannerCopilotProps> = ({
               type="text"
               value={inputQuery}
               onChange={(e) => setInputQuery(e.target.value)}
-              placeholder="Ask about promo stockouts, OTB impact, excess weeks, or any SKU..."
+              placeholder="Ask about stockouts, order quantities, extra stock, or any product..."
               className="flex-1 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-indigo-500"
             />
             <button

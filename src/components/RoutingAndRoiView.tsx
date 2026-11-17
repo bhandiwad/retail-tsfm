@@ -43,23 +43,23 @@ export const RoutingAndRoiView: React.FC<RoutingAndRoiViewProps> = ({
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-xs font-mono uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1.5 font-semibold">
                 <GitBranch className="w-3.5 h-3.5" />
-                Intelligent Series Router &amp; Backtest Matrix
+                Forecast Accuracy by Product Type
               </span>
               <span className="text-xs font-mono text-slate-500">
-                168-SKU Pilot • 12-Week Out-of-Sample Horizon
+                168-SKU Benchmark • 12-Week Test
               </span>
             </div>
             <h2 className="text-lg font-bold text-slate-900 mt-1">
-              Why Routing + Selective Context Beats Defaulting Everything to One Model
+              Why Using the Right Forecast Method Per Product Type Cuts Error in Half
             </h2>
           </div>
 
           <div className="flex items-center gap-3 bg-emerald-50/70 border border-emerald-200 px-3.5 py-2 rounded-xl">
             <Award className="w-5 h-5 text-emerald-600" />
             <div className="text-xs">
-              <div className="text-slate-600">Portfolio WAPE Reduction</div>
+              <div className="text-slate-600">Forecast Error Improved</div>
               <div className="font-mono font-bold text-emerald-700 text-sm">
-                -13.4 pts (29.8% → 16.4%)
+                29.8% → 16.4% (-13.4 pts)
               </div>
             </div>
           </div>
@@ -70,15 +70,15 @@ export const RoutingAndRoiView: React.FC<RoutingAndRoiViewProps> = ({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-200 text-[11px] font-mono uppercase text-slate-500 bg-slate-50/80">
-                <th className="py-2.5 px-3">Series Archetype</th>
-                <th className="py-2.5 px-3">SKUs</th>
-                <th className="py-2.5 px-3">Assigned Primary Model Route</th>
-                <th className="py-2.5 px-3 text-center">Selective LLM Rate</th>
-                <th className="py-2.5 px-3 text-right">Legacy ERP</th>
-                <th className="py-2.5 px-3 text-right">Classical</th>
-                <th className="py-2.5 px-3 text-right">Chronos-2</th>
-                <th className="py-2.5 px-3 text-right text-emerald-700">ADDL Full</th>
-                <th className="py-2.5 px-3">Primary Business Outcome</th>
+                <th className="py-2.5 px-3">Product Group</th>
+                <th className="py-2.5 px-3">Items</th>
+                <th className="py-2.5 px-3">Forecast Method Used</th>
+                <th className="py-2.5 px-3 text-center">Market Signal Applied</th>
+                <th className="py-2.5 px-3 text-right">Old ERP Error</th>
+                <th className="py-2.5 px-3 text-right">Basic Math</th>
+                <th className="py-2.5 px-3 text-right">Base AI</th>
+                <th className="py-2.5 px-3 text-right text-emerald-700">Our Full AI</th>
+                <th className="py-2.5 px-3">Business Result</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 text-xs">
@@ -153,16 +153,14 @@ export const RoutingAndRoiView: React.FC<RoutingAndRoiViewProps> = ({
             <div className="flex items-center gap-2 mb-1">
               <RefreshCw className="w-4 h-4 text-emerald-600" />
               <span className="text-xs font-mono uppercase tracking-wider text-emerald-700 font-semibold">
-                Step 6: Closed-Loop Feedback Engine
+                Continuous Learning
               </span>
             </div>
             <h3 className="text-base font-bold text-slate-900">
-              Self-Improving Model Routing from Real Inventory Outcomes
+              Improves Automatically From Real Store Sales Every Month
             </h3>
             <p className="text-xs text-slate-500 mt-1">
-              Instead of measuring forecast WAPE in isolation, ADDL tracks realized
-              excess weeks, stockouts, and markdown depth—automatically updating
-              router weights.
+              Tracks actual stockouts, extra slow stock, and discounts each cycle and automatically adjusts future order weights.
             </p>
 
             <div className="space-y-3 mt-4">
@@ -184,7 +182,7 @@ export const RoutingAndRoiView: React.FC<RoutingAndRoiViewProps> = ({
                     {ev.observation}
                   </p>
                   <p className="text-xs text-indigo-800">
-                    <strong className="text-indigo-900">Router Mutation:</strong>{' '}
+                    <strong className="text-indigo-900">System Update:</strong>{' '}
                     {ev.routerAction}
                   </p>
                   <div className="pt-1 text-[11px] font-mono text-emerald-700 font-semibold flex items-center gap-1">
@@ -381,19 +379,17 @@ export const RoutingAndRoiView: React.FC<RoutingAndRoiViewProps> = ({
           <div className="mt-5 p-4 rounded-xl bg-gradient-to-r from-indigo-50 via-white to-emerald-50 border border-indigo-200 flex flex-wrap items-center justify-between gap-4">
             <div>
               <div className="text-xs font-mono uppercase tracking-wider text-indigo-700 font-bold">
-                Recommended Next Step • Low-Risk 6-Week Overlay Pilot
+                Fast 4-Week Pilot • Works With Your Current ERP
               </div>
               <div className="text-sm font-bold text-slate-900 mt-0.5">
-                1 Category (50–200 SKUs) • Zero ERP Rip-and-Replace • Apache 2.0
-                Open-Weight Models
+                Start With 1 Product Category (50–200 Items) • No System Replacement Needed
               </div>
               <div className="text-xs text-slate-600 mt-1">
-                Pre-agreed success criteria: &gt;10 pt WAPE reduction on
-                promo/cold-start SKUs &amp;{' '}
+                Target pilot outcome: 10+ point forecast accuracy improvement &amp;{' '}
                 <strong className="text-emerald-700">
                   ${(totalAnnualRecurringBenefitUsd / 1_000_000).toFixed(2)}M/yr
                 </strong>{' '}
-                annualized EBITDA impact.
+                estimated annual cash and margin gain.
               </div>
             </div>
           </div>

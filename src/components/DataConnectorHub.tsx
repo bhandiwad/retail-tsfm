@@ -371,23 +371,17 @@ export const DataConnectorHub: React.FC<DataConnectorHubProps> = ({
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-xs font-mono uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1.5 font-semibold">
                 <Database className="w-3.5 h-3.5" />
-                BYOD Validation &amp; Enterprise Connector Hub
+                Upload Your CSV &amp; Connect Systems
               </span>
               <span className="text-xs font-mono text-slate-500">
-                Zero ERP Rip-and-Replace • 3 Ways for TOMS to Validate on Their Own Data
+                Works Alongside Your Current ERP • Test in Minutes
               </span>
             </div>
             <h2 className="text-xl font-bold text-slate-900 mt-1.5">
-              How Retailers Test &amp; Prove ROI on Their Own Historical Data in 48 Hours
+              Test Forecast Accuracy on Your Own Past Sales File in Minutes
             </h2>
             <p className="text-xs text-slate-600 mt-1 max-w-3xl">
-              Retailers don't need a 6-month IT integration to prove this works. TOMS can validate{' '}
-              <strong className="text-slate-900">
-                Pandita's Adaptive Demand Decision Layer
-              </strong>{' '}
-              immediately via a <strong className="text-indigo-700">Blind Historical Cutoff Backtest</strong>:
-              feed 52 weeks of historical POS + Inventory + Legacy Forecasts (masking the last 12 weeks),
-              and compare ADDL's recommendations against what actually happened.
+              You don&apos;t need a 6-month IT project to prove results. Upload 52 weeks of past sales and stock (hiding the last 12 weeks), and compare our AI&apos;s order recommendations directly against what actually sold.
             </p>
           </div>
 
@@ -397,7 +391,7 @@ export const DataConnectorHub: React.FC<DataConnectorHubProps> = ({
               className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer"
             >
               <Download className="w-3.5 h-3.5 text-indigo-600" />
-              Download TOMS CSV Template
+              Download Sample CSV
             </button>
           </div>
         </div>
@@ -471,10 +465,10 @@ export const DataConnectorHub: React.FC<DataConnectorHubProps> = ({
                 <UploadCloud className="w-5 h-5 text-indigo-600" />
                 <div>
                   <h3 className="text-base font-bold text-slate-900">
-                    1. Live BYOD Historical Data Upload &amp; Backtest
+                    1. Upload Your Past Sales CSV &amp; Test Accuracy
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Upload a CSV or edit the live TOMS historical extract below to ingest custom SKUs
+                    Upload a CSV or edit the sample rows below to add your own products
                   </p>
                 </div>
               </div>
@@ -509,7 +503,7 @@ export const DataConnectorHub: React.FC<DataConnectorHubProps> = ({
 
             {/* Editable CSV Preview Box */}
             <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Historical SKU Extract (Editable CSV — Add or modify TOMS styles &amp; run backtest):
+              Sample Product Sales CSV (Editable — Add or edit rows &amp; run test):
             </label>
             <textarea
               rows={6}
@@ -520,9 +514,9 @@ export const DataConnectorHub: React.FC<DataConnectorHubProps> = ({
 
             <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
               <div className="text-[11px] text-slate-500">
-                Pipeline runs: <strong className="text-slate-700">Stockout De-Censoring</strong> →{' '}
-                <strong className="text-slate-700">Series Archetype Router</strong> →{' '}
-                <strong className="text-slate-700">Chronos-2 12-Wk Backtest</strong>
+                Steps: <strong className="text-slate-700">Zero-Stock Fix</strong> →{' '}
+                <strong className="text-slate-700">Best Forecast Method</strong> →{' '}
+                <strong className="text-slate-700">12-Week Accuracy Check</strong>
               </div>
               <button
                 onClick={handleRunValidationBacktest}
@@ -532,12 +526,12 @@ export const DataConnectorHub: React.FC<DataConnectorHubProps> = ({
                 {backtestRunning ? (
                   <>
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    Running De-Censoring &amp; Chronos-2 Backtest...
+                    Testing Accuracy...
                   </>
                 ) : (
                   <>
                     <Play className="w-3.5 h-3.5 fill-white" />
-                    Ingest &amp; Run 12-Week Validation Backtest
+                    Load CSV &amp; Run 12-Week Test
                   </>
                 )}
               </button>
@@ -725,7 +719,7 @@ export const DataConnectorHub: React.FC<DataConnectorHubProps> = ({
           {/* Canonical Data Dictionary Footer */}
           <div className="mt-4 pt-3 border-t border-slate-200">
             <div className="text-xs font-bold text-slate-800 mb-1.5">
-              Minimum Data Needed from TOMS for a 4-Week Pilot Validation:
+              Minimum Data Needed for a 4-Week Pilot:
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
               <div className="p-2 rounded-lg bg-slate-50 border border-slate-200">

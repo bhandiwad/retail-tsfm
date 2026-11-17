@@ -15,6 +15,6 @@ export default async function handler(req, res) {
     openrouterModel: activeModel,
     chronosBoltLoaded: true,
     statsforecastAvailable: true,
-    tsfmEngine: 'Chronos-2 Quantile & De-Censoring Engine (Vercel Cloud) + StatsForecast',
+    tsfmEngine: 'AI Sales & Stock Forecasting Engine (Cloud Ready)',
   });
 }

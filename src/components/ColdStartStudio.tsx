@@ -137,14 +137,14 @@ export const ColdStartStudio: React.FC<ColdStartStudioProps> = ({
             <div className="flex items-center gap-2">
               <span className="px-2.5 py-0.5 rounded-full text-xs font-mono uppercase tracking-wider bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-200 flex items-center gap-1.5 font-semibold">
                 <ScanEye className="w-3.5 h-3.5" />
-                Multimodal Cold-Start Studio
+                New Product Launch Planner
               </span>
               <span className="text-xs text-slate-500 font-mono">
-                Vision + Attribute Embedding → Chronos-2 Zero-Shot Prior
+                Matches Look, Material &amp; Price to Similar Past Launches
               </span>
             </div>
             <h2 className="text-lg font-bold text-slate-900 mt-1">
-              Solving Footwear Cold-Start Launches Without Historical POS
+              Predicting First-Season Sales for Brand-New Styles With Zero Past History
             </h2>
           </div>
 
@@ -178,7 +178,7 @@ export const ColdStartStudio: React.FC<ColdStartStudioProps> = ({
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-mono uppercase tracking-wider text-indigo-700 font-semibold flex items-center gap-1.5">
                   <Cpu className="w-3.5 h-3.5" />
-                  1. Vision &amp; Attribute Encoder
+                  1. Product Details &amp; Visual Tags
                 </span>
                 <span className="text-xs font-mono text-slate-500">
                   {preset.skuId}
@@ -209,7 +209,7 @@ export const ColdStartStudio: React.FC<ColdStartStudioProps> = ({
 
               <div className="mt-3.5">
                 <div className="text-xs font-semibold text-slate-700 mb-1.5">
-                  Extracted Multimodal Conditioning Tokens:
+                  Detected Style &amp; Material Features:
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {preset.tags.map((tag, i) => (
@@ -226,8 +226,8 @@ export const ColdStartStudio: React.FC<ColdStartStudioProps> = ({
 
             <div className="mt-4 pt-3 border-t border-slate-200">
               <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 mb-1">
-                <span>CLIP + Merch Attribute Vector (512-d)</span>
-                <span className="text-emerald-700 font-semibold">Cosine Ready</span>
+                <span>Product Similarity Fingerprint</span>
+                <span className="text-emerald-700 font-semibold">Matched</span>
               </div>
               <div className="grid grid-cols-8 gap-1">
                 {data.newProduct.embeddingVectorPreview.map((v, i) => (
@@ -247,9 +247,9 @@ export const ColdStartStudio: React.FC<ColdStartStudioProps> = ({
             <div className="flex items-center justify-between mb-3">
               <span className="text-xs font-mono uppercase tracking-wider text-indigo-700 font-semibold flex items-center gap-1.5">
                 <Layers className="w-3.5 h-3.5" />
-                2. Top-3 Historical Look-Alike Priors
+                2. Top 3 Similar Past Launches
               </span>
-              <span className="text-[11px] text-slate-500">3-Yr Catalog Search</span>
+              <span className="text-[11px] text-slate-500">3-Yr Catalog Match</span>
             </div>
 
             <div className="space-y-2.5">
@@ -313,7 +313,7 @@ export const ColdStartStudio: React.FC<ColdStartStudioProps> = ({
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-mono uppercase tracking-wider text-emerald-700 font-semibold flex items-center gap-1.5">
                   <TrendingUp className="w-3.5 h-3.5" />
-                  3. Chronos-2 Zero-Shot Launch Curve
+                  3. Predicted 12-Week Launch Sales
                 </span>
                 <span className="text-xs font-mono text-emerald-700 font-bold">
                   Peak: {preset.aiPeak} u/wk
@@ -395,11 +395,11 @@ export const ColdStartStudio: React.FC<ColdStartStudioProps> = ({
               <div className="flex items-center justify-between text-[11px] mt-1.5 px-1">
                 <span className="flex items-center gap-1.5 text-rose-700 font-medium">
                   <span className="w-2.5 h-0.5 bg-rose-500 inline-block" />
-                  Merch Planner Flat Guess ({preset.plannerGuess} u/wk)
+                  Manual Flat Guess ({preset.plannerGuess} u/wk)
                 </span>
                 <span className="flex items-center gap-1.5 text-emerald-700 font-semibold">
                   <span className="w-2.5 h-0.5 bg-emerald-600 inline-block" />
-                  ADDL Zero-Shot Trajectory
+                  AI Launch Forecast
                 </span>
               </div>
             </div>
@@ -511,7 +511,7 @@ export const ColdStartStudio: React.FC<ColdStartStudioProps> = ({
                       title={`AI Size Curve: ${sz.aiOptimizedPct}%`}
                     />
                     <span className="text-[9px] font-mono text-emerald-700 font-semibold">
-                      ADDL
+                      AI
                     </span>
                   </div>
                 </div>

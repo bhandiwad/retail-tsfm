@@ -221,12 +221,12 @@ export const ForecastCanvas: React.FC<ForecastCanvasProps> = ({
         <div>
           <div className="flex flex-wrap items-center gap-2.5">
             <h3 className="text-base font-bold text-slate-900">
-              Demand &amp; Inventory Trajectory
+              Weekly Sales Forecast &amp; Stock Projection
             </h3>
             {totalCensoredUnits > 0 && (
               <span className="inline-flex items-center gap-1 text-xs font-medium px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200/80">
                 <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                +{totalCensoredUnits.toLocaleString()} OOS Units Reconstructed
+                +{totalCensoredUnits.toLocaleString()} Missed Stockout Sales Restored
               </span>
             )}
             {activeLiveSignal && (
@@ -237,7 +237,7 @@ export const ForecastCanvas: React.FC<ForecastCanvasProps> = ({
             )}
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Hover any week to inspect point-of-sale history, stockout recovery, and P10–P90 forecast intervals
+            Move your cursor over any week to compare actual past sales, missed stockout demand, and the next 12 weeks
           </p>
         </div>
 
@@ -252,7 +252,7 @@ export const ForecastCanvas: React.FC<ForecastCanvasProps> = ({
                   : 'text-slate-500 hover:text-slate-800'
               }`}
             >
-              Combined View
+              Both Charts
             </button>
             <button
               onClick={() => setChartMode('demand')}
@@ -263,7 +263,7 @@ export const ForecastCanvas: React.FC<ForecastCanvasProps> = ({
               }`}
             >
               <TrendingUp className="w-3.5 h-3.5" />
-              Demand Fan
+              Sales Forecast
             </button>
             <button
               onClick={() => setChartMode('inventory')}
@@ -274,7 +274,7 @@ export const ForecastCanvas: React.FC<ForecastCanvasProps> = ({
               }`}
             >
               <Layers className="w-3.5 h-3.5" />
-              Inventory Sawtooth
+              Stock Level
             </button>
           </div>
         </div>
@@ -286,7 +286,7 @@ export const ForecastCanvas: React.FC<ForecastCanvasProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50/90 text-emerald-800 font-semibold border border-emerald-200/80">
               <span className="w-2 h-2 rounded-full bg-emerald-600" />
-              AI Routed P50 ({sku.metrics.addlWape}% WAPE)
+              AI Forecast ({sku.metrics.addlWape}% Error)
             </span>
 
             <button
@@ -298,7 +298,7 @@ export const ForecastCanvas: React.FC<ForecastCanvasProps> = ({
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-rose-500" />
-              Legacy ERP ({sku.metrics.legacyWape}% WAPE)
+              Old ERP Forecast ({sku.metrics.legacyWape}% Error)
             </button>
 
             <button
@@ -310,7 +310,7 @@ export const ForecastCanvas: React.FC<ForecastCanvasProps> = ({
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-amber-500" />
-              De-Censored OOS
+              Missed Sales (Zero Stock)
             </button>
 
             <button
@@ -322,12 +322,12 @@ export const ForecastCanvas: React.FC<ForecastCanvasProps> = ({
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-sky-500" />
-              StatsForecast ({sku.metrics.statsForecastWape}%)
+              Basic Math ({sku.metrics.statsForecastWape}% Error)
             </button>
           </div>
 
           <span className="text-[11px] font-mono text-slate-400">
-            Shaded Band: Chronos P10–P90 Uncertainty Interval
+            Shaded Band: Expected Low-to-High Sales Range
           </span>
         </div>
       )}
@@ -604,23 +604,23 @@ export const ForecastCanvas: React.FC<ForecastCanvasProps> = ({
           <div className="mt-2 h-8 px-3.5 rounded-xl bg-slate-50 border border-slate-200/80 flex items-center justify-between text-xs font-mono text-slate-600">
             {hoveredIndex === null ? (
               <span className="text-slate-400 font-sans text-xs">
-                Move cursor across chart to inspect weekly demand &amp; quantile intervals
+                Move cursor across chart to see weekly sales &amp; stock numbers
               </span>
             ) : hoveredIndex <= splitIndex ? (
               <>
                 <span className="text-slate-900 font-semibold">
-                  {recentHistory[hoveredIndex].weekLabel} (Historical)
+                  {recentHistory[hoveredIndex].weekLabel} (Past Week)
                 </span>
                 <span>
-                  POS Sales: <strong className="text-slate-900">{recentHistory[hoveredIndex].observedSales} u</strong>
+                  Actual Sales: <strong className="text-slate-900">{recentHistory[hoveredIndex].observedSales} u</strong>
                 </span>
                 <span className="text-amber-700">
                   True Demand: <strong>{recentHistory[hoveredIndex].trueLatentDemand} u</strong>
                   {recentHistory[hoveredIndex].isStockoutCensored &&
-                    ` (+${recentHistory[hoveredIndex].censoredUnits} u OOS)`}
+                    ` (+${recentHistory[hoveredIndex].censoredUnits} u missed)`}
                 </span>
                 <span className="text-rose-600">
-                  Legacy ERP: {recentHistory[hoveredIndex].erpHistoricalForecast} u
+                  Old ERP: {recentHistory[hoveredIndex].erpHistoricalForecast} u
                 </span>
               </>
             ) : (
@@ -632,13 +632,13 @@ export const ForecastCanvas: React.FC<ForecastCanvasProps> = ({
                       {f.weekLabel} {f.isPromo ? '• Promo' : ''}
                     </span>
                     <span className="text-emerald-700">
-                      AI P50: <strong>{f.simAddlP50} u</strong> (P10: {f.simAddlP10} – P90: {f.simAddlP90})
+                      AI Forecast: <strong>{f.simAddlP50} u</strong> (Range: {f.simAddlP10}–{f.simAddlP90})
                     </span>
                     <span className="text-indigo-700">
-                      Target P{whatIfTargetQuantile}: <strong>{f.targetCurveValue} u</strong>
+                      Safety Target ({whatIfTargetQuantile}%): <strong>{f.targetCurveValue} u</strong>
                     </span>
                     <span className="text-rose-600">
-                      Legacy ERP: {f.legacyErpForecast} u
+                      Old ERP: {f.legacyErpForecast} u
                     </span>
                   </>
                 );
@@ -653,20 +653,20 @@ export const ForecastCanvas: React.FC<ForecastCanvasProps> = ({
         <div className={`${chartMode === 'both' ? 'mt-6 pt-5 border-t border-slate-100' : ''}`}>
           <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
             <span className="text-xs font-bold text-slate-800">
-              12-Week Inventory Position (Status Quo vs. Approved AI Action)
+              12-Week Stock Projection (Without Action vs. With AI Plan)
             </span>
             <div className="flex items-center gap-4 text-xs">
               <span className="flex items-center gap-1.5 text-emerald-700 font-medium">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block" />
-                After AI Action
+                With AI Plan
               </span>
               <span className="flex items-center gap-1.5 text-rose-600 font-medium">
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block" />
-                Status Quo ERP
+                Without Action
               </span>
               <span className="flex items-center gap-1.5 text-amber-700 font-medium">
                 <span className="w-2.5 h-0.5 bg-amber-500 inline-block" />
-                Safety Stock Floor
+                Minimum Safe Stock
               </span>
             </div>
           </div>

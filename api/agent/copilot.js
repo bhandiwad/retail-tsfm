@@ -92,13 +92,13 @@ Portfolio Exception Summary: ${JSON.stringify(portfolioSummary)}`;
   }
 
   return res.status(200).json({
-    providerUsed: 'Quantitative Decision Engine',
-    answer: `For ${selectedSku.name} (${selectedSku.skuId}), routing through ${selectedSku.routedModel} reduces 12-week WAPE from ${selectedSku.metrics?.legacyWape}% (Legacy ERP) to ${selectedSku.metrics?.addlWape}%. Executing "${selectedSku.actionTitle}" lifts availability from ${selectedSku.metrics?.availabilityBefore}% to ${selectedSku.metrics?.availabilityAfter}% and captures $${(selectedSku.metrics?.financialImpactUsd || 0).toLocaleString()} in net margin & working capital impact.`,
+    providerUsed: 'AI Planning Assistant',
+    answer: `For ${selectedSku.name} (${selectedSku.skuId}), our AI forecast lowers 12-week error from ${selectedSku.metrics?.legacyWape}% (old ERP) down to ${selectedSku.metrics?.addlWape}%. Approving "${selectedSku.actionTitle}" raises store availability from ${selectedSku.metrics?.availabilityBefore}% to ${selectedSku.metrics?.availabilityAfter}% and saves $${(selectedSku.metrics?.financialImpactUsd || 0).toLocaleString()} in margin and cash.`,
     highlightMetrics: [
-      { label: 'Target Quantile', value: `P${selectedSku.targetQuantile}` },
-      { label: 'Routed WAPE', value: `${selectedSku.metrics?.addlWape}%` },
+      { label: 'Safety Target', value: `${selectedSku.targetQuantile}%` },
+      { label: 'Forecast Error', value: `${selectedSku.metrics?.addlWape}%` },
       {
-        label: 'Net Impact',
+        label: 'Net Savings',
         value: `$${(selectedSku.metrics?.financialImpactUsd || 0).toLocaleString()}`,
       },
     ],
